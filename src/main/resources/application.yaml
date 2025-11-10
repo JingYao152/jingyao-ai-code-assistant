@@ -1,0 +1,7 @@
+spring:
+  application:
+    name: jingyao-ai-code-assistant-backend
+server:
+  port: 8123
+  servlet:
+    context-path: /api
