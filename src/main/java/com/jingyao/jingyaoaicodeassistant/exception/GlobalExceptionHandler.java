@@ -1,7 +1,7 @@
-package com.jingyao.jingyaoaicodeassistant.common;
+package com.jingyao.jingyaoaicodeassistant.exception;
 
-import com.jingyao.jingyaoaicodeassistant.exception.BusinessException;
-import com.jingyao.jingyaoaicodeassistant.exception.ErrorCode;
+import com.jingyao.jingyaoaicodeassistant.common.BaseResponse;
+import com.jingyao.jingyaoaicodeassistant.common.ResultUtils;
 import io.swagger.v3.oas.annotations.Hidden;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.web.bind.annotation.ExceptionHandler;
