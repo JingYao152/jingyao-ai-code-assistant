@@ -1,6 +1,11 @@
 spring:
   application:
     name: jingyao-ai-code-assistant-backend
+  datasource:
+    driver-class-name: com.mysql.cj.jdbc.Driver
+    url: jdbc:mysql://localhost:3306/ai_code_assistant?useSSL=false&serverTimezone=UTC&characterEncoding=utf8
+    name: root
+    password: Lhr20030514
 server:
   port: 8123
   servlet:
