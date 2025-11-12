@@ -9,5 +9,12 @@ import com.jingyao.jingyaoaicodeassistant.model.entity.User;
  * @author <a href="https://github.com/jingyao152">JINGYAO</a>
  */
 public interface UserService extends IService<User> {
-
+	/**
+	 * 用户注册方法
+	 * @param userAccount 用户账号，用于注册的唯一标识
+	 * @param userPassword 用户密码，用于账户登录的密码
+	 * @param checkPassword 确认密码，用于二次确认用户输入的密码是否正确
+	 * @return 新用户ID
+	 */
+	long userRegister(String userAccount, String userPassword, String checkPassword);
 }
