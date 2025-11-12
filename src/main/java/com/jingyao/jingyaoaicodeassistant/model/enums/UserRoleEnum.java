@@ -4,14 +4,27 @@ import cn.hutool.core.util.ObjUtil;
 import lombok.Data;
 import lombok.Getter;
 
+/**
+ * 用户角色枚举类
+ * 使用@Getter注解自动为所有字段生成getter方法
+ */
 @Getter
 public enum UserRoleEnum {
-	USER("用户", "user"),
-	ADMIN("管理员", "admin");
 	
+	// 枚举值定义，包含中文描述和英文值
+	USER("用户", "user"),    // 普通用户角色
+	ADMIN("管理员", "admin"); // 管理员角色
+	
+	// 枚举字段：角色描述文本
 	private final String text;
+	// 枚举字段：角色值
 	private final String value;
 	
+	/**
+	 * 枚举构造函数
+	 * @param text 角色的中文描述
+	 * @param value 角色的英文值
+	 */
 	UserRoleEnum(String text, String value) {
 		this.text = text;
 		this.value = value;
