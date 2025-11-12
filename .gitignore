@@ -4,6 +4,7 @@ target/
 !**/src/main/**/target/
 !**/src/test/**/target/
 .mvn
+jingyao-ai-code-assistant-frontend
 
 ### STS ###
 .apt_generated
