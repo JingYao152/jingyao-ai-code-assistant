@@ -1,0 +1,27 @@
+package com.jingyao.jingyaoaicodeassistant.ai;
+
+import dev.langchain4j.service.SystemMessage;
+
+public interface AiCodeGeneratorService {
+	
+	String generateCode(String userMessage);
+	
+	/**
+	 * 生成 HTML 代码
+	 *
+	 * @param userMessage 用户消息
+	 * @return 生成的代码结果
+	 */
+	@SystemMessage(fromResource = "prompt/text.txt")
+	String generateHtmlCode(String userMessage);
+	
+	/**
+	 * 生成多文件代码
+	 *
+	 * @param userMessage 用户消息
+	 * @return 生成的代码结果
+	 */
+	@SystemMessage(fromResource = "prompt/text.txt")
+	String generateMultiFileCode(String userMessage);
+	
+}
