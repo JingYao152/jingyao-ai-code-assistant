@@ -152,4 +152,20 @@ public class UserController {
 		// 使用ResultUtils工具类构建成功响应，并将用户信息转换为VO脱敏对象返回
 		return ResultUtils.success(userService.getLoginUserVO(loginUser));
 	}
+	
+	/**
+	 * 处理用户登出请求的接口方法
+	 *
+	 * @param request HttpServletRequest对象，包含请求相关信息
+	 * @return BaseResponse<Boolean> 返回操作结果，包含登出操作是否成功
+	 */
+	@PostMapping("/logout")
+	public BaseResponse<Boolean> userLogout(HttpServletRequest request) {
+		// 检查请求参数是否为空，如果为空则抛出参数错误异常
+		ThrowUtils.throwIf(request == null, ErrorCode.PARAMS_ERROR);
+		// 调用 userService 的 userLogout 方法处理登出逻辑，获取操作结果
+		boolean result = userService.userLogout(request);
+		// 返回操作成功结果，将 result 包装成成功响应返回
+		return ResultUtils.success(result);
+	}
 }
