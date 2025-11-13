@@ -42,4 +42,11 @@ public interface UserService extends IService<User> {
 	 * @return LoginUserVO 登录成功后返回的脱敏用户视图对象
 	 */
 	LoginUserVO userLogin(String userAccount, String userPassword, HttpServletRequest request);
+	
+	/**
+	 * 获取当前登录用户信息
+	 * @param request HTTP请求对象，用于获取当前登录用户的会话信息
+	 * @return 返回当前登录用户的实体对象
+	 */
+	User getLoginUser(HttpServletRequest request);
 }
