@@ -1,9 +1,12 @@
 package com.jingyao.jingyaoaicodeassistant.service;
 
 import com.jingyao.jingyaoaicodeassistant.model.vo.LoginUserVO;
+import com.jingyao.jingyaoaicodeassistant.model.vo.UserVO;
 import com.mybatisflex.core.service.IService;
 import com.jingyao.jingyaoaicodeassistant.model.entity.User;
 import jakarta.servlet.http.HttpServletRequest;
+
+import java.util.List;
 
 /**
  * 用户 服务层。
@@ -56,4 +59,21 @@ public interface UserService extends IService<User> {
 	 * @return 返回布尔值，表示用户登出操作是否成功
 	 */
 	boolean userLogout(HttpServletRequest request);
+	
+	/**
+	 * 根据User对象获取UserVO对象
+	 * UserVO通常用于前端展示，是对User对象的数据封装和转换
+	 *
+	 * @param user 用户实体对象，包含完整的用户信息
+	 * @return UserVO 用户视图对象，通常只包含前端需要展示的字段
+	 */
+	UserVO getUserVO(User user);
+	
+	/**
+	 * 根据用户列表获取用户视图对象列表
+	 *
+	 * @param userList 用户实体对象列表
+	 * @return 用户视图对象列表，包含前端展示所需的数据
+	 */
+	List<UserVO> getUserVOList(List<User> userList);
 }
