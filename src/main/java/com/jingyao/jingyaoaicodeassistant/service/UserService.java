@@ -3,6 +3,7 @@ package com.jingyao.jingyaoaicodeassistant.service;
 import com.jingyao.jingyaoaicodeassistant.model.vo.LoginUserVO;
 import com.mybatisflex.core.service.IService;
 import com.jingyao.jingyaoaicodeassistant.model.entity.User;
+import jakarta.servlet.http.HttpServletRequest;
 
 /**
  * 用户 服务层。
@@ -32,4 +33,13 @@ public interface UserService extends IService<User> {
 	 * @return 返回脱敏后的用户实体对象
 	 */
 	LoginUserVO getLoginUserVO(User user);
+	
+	/**
+	 * 用户登录方法
+	 * @param userAccount 用户账号
+	 * @param userPassword 用户密码
+	 * @param request HTTP请求对象，用于获取请求相关信息
+	 * @return LoginUserVO 登录成功后返回的脱敏用户视图对象
+	 */
+	LoginUserVO userLogin(String userAccount, String userPassword, HttpServletRequest request);
 }
