@@ -5,6 +5,7 @@ import cn.hutool.core.collection.CollUtil;
 import cn.hutool.core.util.StrUtil;
 import com.jingyao.jingyaoaicodeassistant.exception.BusinessException;
 import com.jingyao.jingyaoaicodeassistant.exception.ErrorCode;
+import com.jingyao.jingyaoaicodeassistant.model.dto.user.UserQueryRequest;
 import com.jingyao.jingyaoaicodeassistant.model.enums.UserRoleEnum;
 import com.jingyao.jingyaoaicodeassistant.model.vo.LoginUserVO;
 import com.jingyao.jingyaoaicodeassistant.model.vo.UserVO;
@@ -229,6 +230,37 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
 		// 通过map操作将每个User对象转换为UserVO对象
 		// 最后通过collect将结果收集为List返回
 		return userList.stream().map(this::getUserVO).collect(Collectors.toList());
+	}
+	
+	
+	/**
+	 * 根据用户查询请求构建查询条件包装器
+	 * @param userQueryRequest 用户查询请求对象，包含查询条件
+	 * @return QueryWrapper 构建好的查询条件包装器，用于数据库查询
+	 * @throws BusinessException 当请求参数为空时抛出业务异常
+	 */
+	@Override
+	public QueryWrapper getQueryWrapper(UserQueryRequest userQueryRequest) {
+		// 检查请求参数是否为空，若为空则抛出业务异常
+		if (userQueryRequest == null) {
+			throw new BusinessException(ErrorCode.PARAMS_ERROR, "请求参数为空");
+		}
+		// 从请求对象中获取查询条件
+		Long id = userQueryRequest.getId();
+		String userAccount = userQueryRequest.getUserAccount();
+		String userName = userQueryRequest.getUserName();
+		String userProfile = userQueryRequest.getUserProfile();
+		String userRole = userQueryRequest.getUserRole();
+		String sortField = userQueryRequest.getSortField();
+		String sortOrder = userQueryRequest.getSortOrder();
+		// 创建查询条件包装器，并设置查询条件和排序规则
+		return QueryWrapper.create()
+			.eq("id", id) // 精确匹配ID
+			.eq("userRole", userRole) // 精确匹配用户角色
+			.like("userAccount", userAccount) // 模糊匹配用户账号
+			.like("userName", userName) // 模糊匹配用户名
+			.like("userProfile", userProfile) // 模糊匹配用户简介
+			.orderBy(sortField, "ascend".equals(sortOrder)); // 根据指定字段和排序方式进行排序
 	}
 	
 }
