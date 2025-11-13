@@ -1,11 +1,13 @@
 package com.jingyao.jingyaoaicodeassistant.service.impl;
 
 import cn.hutool.core.bean.BeanUtil;
+import cn.hutool.core.collection.CollUtil;
 import cn.hutool.core.util.StrUtil;
 import com.jingyao.jingyaoaicodeassistant.exception.BusinessException;
 import com.jingyao.jingyaoaicodeassistant.exception.ErrorCode;
 import com.jingyao.jingyaoaicodeassistant.model.enums.UserRoleEnum;
 import com.jingyao.jingyaoaicodeassistant.model.vo.LoginUserVO;
+import com.jingyao.jingyaoaicodeassistant.model.vo.UserVO;
 import com.mybatisflex.core.query.QueryWrapper;
 import com.mybatisflex.spring.service.impl.ServiceImpl;
 import com.jingyao.jingyaoaicodeassistant.model.entity.User;
@@ -14,6 +16,10 @@ import com.jingyao.jingyaoaicodeassistant.service.UserService;
 import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.stereotype.Service;
 import org.springframework.util.DigestUtils;
+
+import java.util.ArrayList;
+import java.util.List;
+import java.util.stream.Collectors;
 
 import static com.jingyao.jingyaoaicodeassistant.constant.UserConstant.USER_LOGIN_STATE;
 
@@ -187,4 +193,42 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
 		// 返回true表示退出登录成功
 		return true;
 	}
+	
+	/**
+	 * 重写父类方法，将User对象转换为UserVO对象
+	 * @param user 用户实体对象
+	 * @return 返回转换后的UserVO视图对象，如果传入的user为null则返回null
+	 */
+	@Override
+	public UserVO getUserVO(User user) {
+		// 参数校验，如果user为null则直接返回null
+		if (user == null) {
+			return null;
+		}
+		// 创建UserVO对象
+		UserVO userVO = new UserVO();
+		// 使用BeanUtil工具类将user对象的属性值复制到userVO对象中
+		BeanUtil.copyProperties(user, userVO);
+		// 返回转换后的UserVO对象
+		return userVO;
+	}
+	
+	
+	/**
+	 * 将用户实体列表转换为用户视图对象列表
+	 * @param userList 用户实体列表，包含完整的用户信息
+	 * @return 用户视图对象列表，仅包含需要展示给用户的信息
+	 */
+	@Override
+	public List<UserVO> getUserVOList(List<User> userList) {
+		// 如果传入的用户列表为空，则返回一个空列表，避免空指针异常
+		if (CollUtil.isEmpty(userList)) {
+			return new ArrayList<>();
+		}
+		// 使用Java 8 Stream API将用户实体列表转换为视图对象列表
+		// 通过map操作将每个User对象转换为UserVO对象
+		// 最后通过collect将结果收集为List返回
+		return userList.stream().map(this::getUserVO).collect(Collectors.toList());
+	}
+	
 }
