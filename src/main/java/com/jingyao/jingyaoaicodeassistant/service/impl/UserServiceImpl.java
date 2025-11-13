@@ -11,8 +11,11 @@ import com.mybatisflex.spring.service.impl.ServiceImpl;
 import com.jingyao.jingyaoaicodeassistant.model.entity.User;
 import com.jingyao.jingyaoaicodeassistant.mapper.UserMapper;
 import com.jingyao.jingyaoaicodeassistant.service.UserService;
+import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.stereotype.Service;
 import org.springframework.util.DigestUtils;
+
+import static com.jingyao.jingyaoaicodeassistant.constant.UserConstant.USER_LOGIN_STATE;
 
 /**
  * 用户 服务层实现。
@@ -106,6 +109,45 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
 		BeanUtil.copyProperties(user, loginUserVO);
 		// 返回转换后的登录用户视图对象
 		return loginUserVO;
+	}
+	
+	
+	/**
+	 * 用户登录方法
+	 * @param userAccount 用户账号
+	 * @param userPassword 用户密码
+	 * @param request HTTP请求对象，用于获取session
+	 * @return LoginUserVO 登录用户信息对象
+	 */
+	@Override
+	public LoginUserVO userLogin(String userAccount, String userPassword, HttpServletRequest request) {
+		// 检查参数是否为空
+		if (StrUtil.hasBlank(userAccount, userPassword)) {
+			throw new BusinessException(ErrorCode.PARAMS_ERROR, "参数为空");
+		}
+		// 检查账号长度是否合法
+		if (userAccount.length() < 4) {
+			throw new BusinessException(ErrorCode.PARAMS_ERROR, "账号错误");
+		}
+		// 检查密码长度是否合法
+		if (userPassword.length() < 8) {
+			throw new BusinessException(ErrorCode.PARAMS_ERROR, "密码错误");
+		}
+		// 对密码进行加密处理
+		String encryptPassword = getEncryptPassword(userPassword);
+		// 创建查询条件，查询用户账号和密码匹配的用户
+		QueryWrapper queryWrapper = new QueryWrapper();
+		queryWrapper.eq("userAccount", userAccount);
+		queryWrapper.eq("userPassword", encryptPassword);
+		User user = this.mapper.selectOneByQuery(queryWrapper);
+		// 如果用户不存在或密码错误，抛出异常
+		if (user == null) {
+			throw new BusinessException(ErrorCode.PARAMS_ERROR, "用户不存在或密码错误");
+		}
+		// 将用户信息存入session中
+		request.getSession().setAttribute(USER_LOGIN_STATE, user);
+		// 返回登录用户信息视图对象
+		return this.getLoginUserVO(user);
 	}
 	
 }
