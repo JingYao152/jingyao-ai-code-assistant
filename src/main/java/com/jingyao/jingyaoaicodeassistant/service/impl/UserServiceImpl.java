@@ -1,9 +1,11 @@
 package com.jingyao.jingyaoaicodeassistant.service.impl;
 
+import cn.hutool.core.bean.BeanUtil;
 import cn.hutool.core.util.StrUtil;
 import com.jingyao.jingyaoaicodeassistant.exception.BusinessException;
 import com.jingyao.jingyaoaicodeassistant.exception.ErrorCode;
 import com.jingyao.jingyaoaicodeassistant.model.enums.UserRoleEnum;
+import com.jingyao.jingyaoaicodeassistant.model.vo.LoginUserVO;
 import com.mybatisflex.core.query.QueryWrapper;
 import com.mybatisflex.spring.service.impl.ServiceImpl;
 import com.jingyao.jingyaoaicodeassistant.model.entity.User;
@@ -83,6 +85,27 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
 		final String SALT = "1145141919180";
 		// 将盐值与用户密码拼接后进行MD5加密，并返回十六进制格式的加密结果
 		return DigestUtils.md5DigestAsHex((SALT + userPassword).getBytes());
+	}
+	
+	/**
+	 * 获取脱敏的用户对象
+	 *
+	 * @param user 用户实体对象
+	 * @return 返回脱敏的用户对象
+	 */
+	@Override
+	public LoginUserVO getLoginUserVO(User user) {
+		// 检查用户对象是否为空
+		if (user == null) {
+			return null;
+		}
+		// 创建登录用户视图对象
+		LoginUserVO loginUserVO = new LoginUserVO();
+		// 将用户对象的属性复制到登录用户视图对象中
+		// 不存在的字段会被自动过滤掉
+		BeanUtil.copyProperties(user, loginUserVO);
+		// 返回转换后的登录用户视图对象
+		return loginUserVO;
 	}
 	
 }
