@@ -117,14 +117,39 @@ public class UserController {
 		return ResultUtils.success(result);
 	}
 	
+	/**
+	 * 用户登录接口
+	 * @param userLoginRequest 用户登录请求体，包含用户账号和密码
+	 * @param request HTTP请求对象，用于获取请求相关信息
+	 * @return BaseResponse<LoginUserVO> 返回登录结果，包含用户信息和登录状态
+	 */
 	@PostMapping("/login")
 	public BaseResponse<LoginUserVO> userLogin(@RequestBody UserLoginRequest userLoginRequest,
 	                                           HttpServletRequest request) {
+		// 检查请求参数是否为空，为空则抛出参数错误异常
 		ThrowUtils.throwIf(userLoginRequest == null, ErrorCode.PARAMS_ERROR);
+		// 从请求体中获取用户账号
 		String userAccount = userLoginRequest.getUserAccount();
+		// 从请求体中获取用户密码
 		String userPassword = userLoginRequest.getUserPassword();
+		// 调用用户服务层处理登录逻辑，返回登录用户信息
 		LoginUserVO loginUserVO = userService.userLogin(userAccount, userPassword, request);
+		// 返回登录成功的响应结果
 		return ResultUtils.success(loginUserVO);
 	}
 	
+	/**
+	 * 获取当前登录用户的接口
+	 * 通过HTTP GET请求访问此端点可以获取当前登录用户的信息
+	 *
+	 * @param request HTTP请求对象，用于获取请求中的用户信息
+	 * @return 返回一个BaseResponse，其中包含LoginUserVO对象，表示当前登录用户的信息
+	 */
+	@GetMapping("/get/login")
+	public BaseResponse<LoginUserVO> getLoginUser(HttpServletRequest request) {
+		// 通过userService获取当前登录用户对象
+		User loginUser = userService.getLoginUser(request);
+		// 使用ResultUtils工具类构建成功响应，并将用户信息转换为VO脱敏对象返回
+		return ResultUtils.success(userService.getLoginUserVO(loginUser));
+	}
 }
