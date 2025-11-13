@@ -1,7 +1,9 @@
 package com.jingyao.jingyaoaicodeassistant.service;
 
+import com.jingyao.jingyaoaicodeassistant.model.dto.user.UserQueryRequest;
 import com.jingyao.jingyaoaicodeassistant.model.vo.LoginUserVO;
 import com.jingyao.jingyaoaicodeassistant.model.vo.UserVO;
+import com.mybatisflex.core.query.QueryWrapper;
 import com.mybatisflex.core.service.IService;
 import com.jingyao.jingyaoaicodeassistant.model.entity.User;
 import jakarta.servlet.http.HttpServletRequest;
@@ -76,4 +78,12 @@ public interface UserService extends IService<User> {
 	 * @return 用户视图对象列表，包含前端展示所需的数据
 	 */
 	List<UserVO> getUserVOList(List<User> userList);
+	
+	/**
+	 * 根据用户查询请求参数构建查询条件包装器
+	 *
+	 * @param userQueryRequest 用户查询请求对象，包含查询条件参数
+	 * @return QueryWrapper 返回一个包含查询条件的MyBatis-Plus查询包装器对象
+	 */
+	QueryWrapper getQueryWrapper(UserQueryRequest userQueryRequest);
 }
