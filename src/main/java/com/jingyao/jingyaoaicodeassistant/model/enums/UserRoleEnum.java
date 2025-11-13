@@ -35,7 +35,7 @@ public enum UserRoleEnum {
 	 * @param value 要查找的值
 	 * @return 匹配到的用户角色枚举，如果没有匹配则返回null
 	 */
-	public static UserRoleEnum getUserByValue(String value) {
+	public static UserRoleEnum getEnumByValue(String value) {
 		// 检查输入值是否为空
 		if (ObjUtil.isEmpty(value)) {
 			return null;
