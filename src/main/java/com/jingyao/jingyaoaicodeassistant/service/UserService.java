@@ -49,4 +49,11 @@ public interface UserService extends IService<User> {
 	 * @return 返回当前登录用户的实体对象
 	 */
 	User getLoginUser(HttpServletRequest request);
+	
+	/**
+	 * 用户登出功能方法
+	 * @param request HttpServletRequest对象，包含客户端请求信息
+	 * @return 返回布尔值，表示用户登出操作是否成功
+	 */
+	boolean userLogout(HttpServletRequest request);
 }
