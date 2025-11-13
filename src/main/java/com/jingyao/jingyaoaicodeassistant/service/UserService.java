@@ -1,5 +1,6 @@
 package com.jingyao.jingyaoaicodeassistant.service;
 
+import com.jingyao.jingyaoaicodeassistant.model.vo.LoginUserVO;
 import com.mybatisflex.core.service.IService;
 import com.jingyao.jingyaoaicodeassistant.model.entity.User;
 
@@ -24,4 +25,11 @@ public interface UserService extends IService<User> {
 	 * @return 返回加密处理后的密码字符串
 	 */
 	String getEncryptPassword(String userPassword);
+	
+	/**
+	 * 获取脱敏的已登录用户对象
+	 * @param user 用户实体对象
+	 * @return 返回脱敏后的用户实体对象
+	 */
+	LoginUserVO getLoginUserVO(User user);
 }
