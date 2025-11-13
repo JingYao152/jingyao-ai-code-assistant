@@ -167,4 +167,24 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
 		// 返回当前登录用户的实体对象
 		return currentUser;
 	}
+	
+	/**
+	 * 用户退出登录方法
+	 * @param request HttpServletRequest对象，用于获取会话信息
+	 * @return boolean 返回true表示退出登录成功
+	 * @throws BusinessException 当用户未登录时抛出业务异常
+	 */
+	@Override
+	public boolean userLogout(HttpServletRequest request) {
+		// 从会话中获取用户登录状态信息
+		Object userObj = request.getSession().getAttribute(USER_LOGIN_STATE);
+		// 如果用户未登录，抛出业务异常
+		if (userObj == null) {
+			throw new BusinessException(ErrorCode.OPERATION_ERROR, "未登录");
+		}
+		// 从会话中移除用户登录状态信息，实现退出登录
+		request.getSession().removeAttribute(USER_LOGIN_STATE);
+		// 返回true表示退出登录成功
+		return true;
+	}
 }
