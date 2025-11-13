@@ -12,7 +12,7 @@ public interface AiCodeGeneratorService {
 	 * @param userMessage 用户消息
 	 * @return 生成的代码结果
 	 */
-	@SystemMessage(fromResource = "prompt/text.txt")
+	@SystemMessage(fromResource = "prompt/html-system-prompt.txt")
 	String generateHtmlCode(String userMessage);
 	
 	/**
@@ -21,7 +21,7 @@ public interface AiCodeGeneratorService {
 	 * @param userMessage 用户消息
 	 * @return 生成的代码结果
 	 */
-	@SystemMessage(fromResource = "prompt/text.txt")
+	@SystemMessage(fromResource = "prompt/multi-file-system-prompt.txt")
 	String generateMultiFileCode(String userMessage);
 	
 }
