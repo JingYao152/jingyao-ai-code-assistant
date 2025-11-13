@@ -150,4 +150,21 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
 		return this.getLoginUserVO(user);
 	}
 	
+	/**
+	 * 获取当前登录用户信息
+	 * @param request HTTP请求对象，用于获取当前登录用户的会话信息
+	 * @return 返回当前登录用户的实体对象
+	 */
+	@Override
+	public User getLoginUser(HttpServletRequest request) {
+		// 从会话中获取当前登录用户信息
+		Object userObj = request.getSession().getAttribute(USER_LOGIN_STATE);
+		User currentUser = (User) userObj;
+		// 如果会话中不存在登录用户信息，抛出异常
+		if (currentUser == null || currentUser.getId() == null) {
+			throw new BusinessException(ErrorCode.NOT_LOGIN_ERROR);
+		}
+		// 返回当前登录用户的实体对象
+		return currentUser;
+	}
 }
