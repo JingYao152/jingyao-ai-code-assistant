@@ -4,8 +4,11 @@ import com.jingyao.jingyaoaicodeassistant.common.BaseResponse;
 import com.jingyao.jingyaoaicodeassistant.common.ResultUtils;
 import com.jingyao.jingyaoaicodeassistant.exception.ErrorCode;
 import com.jingyao.jingyaoaicodeassistant.exception.ThrowUtils;
+import com.jingyao.jingyaoaicodeassistant.model.dto.UserLoginRequest;
 import com.jingyao.jingyaoaicodeassistant.model.dto.UserRegisterRequest;
+import com.jingyao.jingyaoaicodeassistant.model.vo.LoginUserVO;
 import com.mybatisflex.core.paginate.Page;
+import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -112,6 +115,16 @@ public class UserController {
 		String checkPassword = userRegisterRequest.getCheckPassword();
 		long result = userService.userRegister(userAccount, userPassword, checkPassword);
 		return ResultUtils.success(result);
+	}
+	
+	@PostMapping("/login")
+	public BaseResponse<LoginUserVO> userLogin(@RequestBody UserLoginRequest userLoginRequest,
+	                                           HttpServletRequest request) {
+		ThrowUtils.throwIf(userLoginRequest == null, ErrorCode.PARAMS_ERROR);
+		String userAccount = userLoginRequest.getUserAccount();
+		String userPassword = userLoginRequest.getUserPassword();
+		LoginUserVO loginUserVO = userService.userLogin(userAccount, userPassword, request);
+		return ResultUtils.success(loginUserVO);
 	}
 	
 }
