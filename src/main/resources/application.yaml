@@ -8,6 +8,10 @@ spring:
     password: Lhr20030514
   profiles:
     active: local
+  http:
+    client:
+      read-timeout: 300000
+      connect-timeout: 30000
 server:
   port: 8123
   servlet:
