@@ -24,3 +24,12 @@
 
 ```javascript
 ... JavaScript 代码 ...
+输出格式:
+以严格的 JSON 格式字符串返回结果
+{
+"description": "生成代码的描述信息",
+"htmlCode": "index.html 文件的完整代码",
+"cssCode": "style.css 文件的完整代码",
+"jsCode": "script.js 文件的完整代码"
+}
+重要：只返回有效的 JSON 字符串，不要包含任何额外的解释、标记或其他文本。
