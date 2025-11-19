@@ -90,7 +90,7 @@ public class AiCodeGeneratorFacade {
 					File savedDir = CodeFileSaver.saveHtmlCodeResult(htmlCodeResult);
 					log.info("保存成功，路径为：" + savedDir.getAbsolutePath());
 				} catch (Exception e) {
-					log.error("保存失败: {}", e.getMessage());
+					log.error("保存失败: {}", e.getMessage(), e);
 				}
 			});
 	}
@@ -112,15 +112,12 @@ public class AiCodeGeneratorFacade {
 				// 流式返回完成后保存代码
 				try {
 					String completeMultiFileCode = codeBuilder.toString();
-					// MultiFileCodeResult multiFileResult = CodeParser.parseMultiFileCode(completeMultiFileCode);
-					ObjectMapper objectMapper = new ObjectMapper();
-					MultiFileCodeResult multiFileResult = objectMapper.readValue(completeMultiFileCode,
-						MultiFileCodeResult.class);
+					MultiFileCodeResult codeResult = CodeParser.parseMultiFileCode(completeMultiFileCode);
 					// 保存代码到文件
-					File savedDir = CodeFileSaver.saveMultiFileCodeResult(multiFileResult);
+					File savedDir = CodeFileSaver.saveMultiFileCodeResult(codeResult);
 					log.info("保存成功，路径为：" + savedDir.getAbsolutePath());
 				} catch (Exception e) {
-					log.error("保存失败: {}", e.getMessage());
+					log.error("保存失败: {}", e.getMessage(), e);
 				}
 			});
 	}
