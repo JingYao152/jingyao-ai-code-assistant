@@ -4,7 +4,9 @@ import cn.hutool.core.bean.BeanUtil;
 import cn.hutool.core.util.StrUtil;
 import com.jingyao.jingyaoaicodeassistant.ai.model.enums.CodeGenTypeEnum;
 import com.jingyao.jingyaoaicodeassistant.common.BaseResponse;
+import com.jingyao.jingyaoaicodeassistant.common.DeleteRequest;
 import com.jingyao.jingyaoaicodeassistant.common.ResultUtils;
+import com.jingyao.jingyaoaicodeassistant.constant.UserConstant;
 import com.jingyao.jingyaoaicodeassistant.exception.BusinessException;
 import com.jingyao.jingyaoaicodeassistant.exception.ErrorCode;
 import com.jingyao.jingyaoaicodeassistant.exception.ThrowUtils;
@@ -107,4 +109,40 @@ public class AppController {
 		// 返回更新成功的响应
 		return ResultUtils.success(true);
 	}
+	
+	/**
+	 * 删除应用（用户只能删除自己的应用）
+	 *
+	 * @param deleteRequest 删除请求对象，包含要删除的应用ID
+	 * @param request HTTP请求对象，用于获取当前登录用户信息
+	 * @return 删除结果
+	 * @throws BusinessException 当参数无效时抛出参数错误异常
+	 * @throws BusinessException 当应用不存在时抛出未找到错误异常
+	 * @throws BusinessException 当用户无权限删除时抛出无权限错误异常
+	 */
+	@PostMapping("/delete")
+	public BaseResponse<Boolean> deleteApp(@RequestBody DeleteRequest deleteRequest, HttpServletRequest request) {
+		// 参数合法性校验：确保请求对象不为null且应用ID为正数
+		if (deleteRequest == null || deleteRequest.getId() <= 0) {
+			throw new BusinessException(ErrorCode.PARAMS_ERROR);
+		}
+		// 获取当前登录用户信息，用于权限验证
+		User loginUser = userService.getLoginUser(request);
+		// 提取应用ID，用于数据库查询
+		long id = deleteRequest.getId();
+		// 判断应用是否存在
+		App oldApp = appService.getById(id);
+		ThrowUtils.throwIf(oldApp == null, ErrorCode.NOT_FOUND_ERROR);
+		// 仅本人或管理员可删除应用
+		if (!oldApp.getUserId().equals(loginUser.getId()) && !UserConstant.ADMIN_ROLE.equals(loginUser.getUserRole())) {
+			throw new BusinessException(ErrorCode.NO_AUTH_ERROR);
+		}
+		// 执行数据库删除操作
+		boolean result = appService.removeById(id);
+		// 操作结果校验：确保删除操作成功执行
+		ThrowUtils.throwIf(!result, ErrorCode.OPERATION_ERROR);
+		// 返回删除成功的响应
+		return ResultUtils.success(result);
+	}
+	
 }
