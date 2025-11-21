@@ -5,18 +5,15 @@ import cn.hutool.core.util.StrUtil;
 import com.jingyao.jingyaoaicodeassistant.ai.model.enums.CodeGenTypeEnum;
 import com.jingyao.jingyaoaicodeassistant.common.BaseResponse;
 import com.jingyao.jingyaoaicodeassistant.common.ResultUtils;
+import com.jingyao.jingyaoaicodeassistant.exception.BusinessException;
 import com.jingyao.jingyaoaicodeassistant.exception.ErrorCode;
 import com.jingyao.jingyaoaicodeassistant.exception.ThrowUtils;
 import com.jingyao.jingyaoaicodeassistant.model.dto.app.AppAddRequest;
+import com.jingyao.jingyaoaicodeassistant.model.dto.app.AppUpdateRequest;
 import com.jingyao.jingyaoaicodeassistant.model.entity.User;
 import com.jingyao.jingyaoaicodeassistant.service.UserService;
-import com.mybatisflex.core.paginate.Page;
 import jakarta.servlet.http.HttpServletRequest;
-import org.springframework.web.bind.annotation.DeleteMapping;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -24,7 +21,7 @@ import com.jingyao.jingyaoaicodeassistant.model.entity.App;
 import com.jingyao.jingyaoaicodeassistant.service.AppService;
 import org.springframework.web.bind.annotation.RestController;
 
-import java.util.List;
+import java.time.LocalDateTime;
 
 /**
  * 应用 控制层。
@@ -70,5 +67,44 @@ public class AppController {
 		return ResultUtils.success(app.getId());
 	}
 	
-	
+	/**
+	 * 更新应用（用户只能更新自己的应用名称）
+	 *
+	 * @param appUpdateRequest 应用更新请求对象，包含要更新的应用ID和新名称
+	 * @param request          HTTP请求对象，用于获取当前登录用户信息
+	 * @return BaseResponse<Boolean> 返回更新操作是否成功的布尔值
+	 * @throws BusinessException 当参数无效、应用不存在或无权限时抛出业务异常
+	 * @throws BusinessException 当数据库更新操作失败时抛出业务异常
+	 */
+	@PostMapping("/update")
+	public BaseResponse<Boolean> updateApp(@RequestBody AppUpdateRequest appUpdateRequest,
+	                                       HttpServletRequest request) {
+		// 参数合法性校验：确保请求对象和应用ID不为null
+		if (appUpdateRequest == null || appUpdateRequest.getId() == null) {
+			throw new BusinessException(ErrorCode.PARAMS_ERROR);
+		}
+		// 获取当前登录用户信息，用于权限验证
+		User loginUser = userService.getLoginUser(request);
+		// 提取应用ID，用于数据库查询
+		long id = appUpdateRequest.getId();
+		// 数据存在性检查：验证要更新的应用是否存在
+		App oldApp = appService.getById(id);
+		ThrowUtils.throwIf(oldApp == null, ErrorCode.NOT_FOUND_ERROR);
+		// 权限验证：确保只有应用所有者才能更新应用
+		if (!oldApp.getUserId().equals(loginUser.getId())) {
+			throw new BusinessException(ErrorCode.NO_AUTH_ERROR);
+		}
+		// 构建更新对象：只设置需要更新的字段
+		App app = new App();
+		app.setId(id);
+		app.setAppName(appUpdateRequest.getAppName());
+		// 设置编辑时间：自动记录当前时间为最后编辑时间
+		app.setEditTime(LocalDateTime.now());
+		// 执行数据库更新操作
+		boolean result = appService.updateById(app);
+		// 操作结果校验：确保更新操作成功执行
+		ThrowUtils.throwIf(!result, ErrorCode.OPERATION_ERROR);
+		// 返回更新成功的响应
+		return ResultUtils.success(true);
+	}
 }
