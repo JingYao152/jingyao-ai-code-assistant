@@ -13,15 +13,13 @@ import com.jingyao.jingyaoaicodeassistant.exception.ThrowUtils;
 import com.jingyao.jingyaoaicodeassistant.model.dto.app.AppAddRequest;
 import com.jingyao.jingyaoaicodeassistant.model.dto.app.AppUpdateRequest;
 import com.jingyao.jingyaoaicodeassistant.model.entity.User;
+import com.jingyao.jingyaoaicodeassistant.model.vo.AppVO;
 import com.jingyao.jingyaoaicodeassistant.service.UserService;
 import jakarta.servlet.http.HttpServletRequest;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.*;
 import org.springframework.beans.factory.annotation.Autowired;
 import com.jingyao.jingyaoaicodeassistant.model.entity.App;
 import com.jingyao.jingyaoaicodeassistant.service.AppService;
-import org.springframework.web.bind.annotation.RestController;
 
 import java.time.LocalDateTime;
 
@@ -143,6 +141,22 @@ public class AppController {
 		ThrowUtils.throwIf(!result, ErrorCode.OPERATION_ERROR);
 		// 返回删除成功的响应
 		return ResultUtils.success(result);
+	}
+	
+	/**
+	 * 根据 id 获取应用详情
+	 *
+	 * @param id 应用 id
+	 * @return 应用详情
+	 */
+	@GetMapping("/get/vo")
+	public BaseResponse<AppVO> getAppVOById(long id) {
+		ThrowUtils.throwIf(id <= 0, ErrorCode.PARAMS_ERROR);
+		// 查询数据库
+		App app = appService.getById(id);
+		ThrowUtils.throwIf(app == null, ErrorCode.NOT_FOUND_ERROR);
+		// 获取包含用户信息的封装类
+		return ResultUtils.success(appService.getAppVO(app));
 	}
 	
 }
