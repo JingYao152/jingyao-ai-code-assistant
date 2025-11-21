@@ -1,6 +1,8 @@
 package com.jingyao.jingyaoaicodeassistant.service;
 
+import com.jingyao.jingyaoaicodeassistant.model.dto.app.AppQueryRequest;
 import com.jingyao.jingyaoaicodeassistant.model.vo.AppVO;
+import com.mybatisflex.core.query.QueryWrapper;
 import com.mybatisflex.core.service.IService;
 import com.jingyao.jingyaoaicodeassistant.model.entity.App;
 
@@ -11,4 +13,6 @@ import com.jingyao.jingyaoaicodeassistant.model.entity.App;
  */
 public interface AppService extends IService<App> {
 	AppVO getAppVO(App app);
+	
+	QueryWrapper getQueryWrapper(AppQueryRequest appQueryRequest);
 }
