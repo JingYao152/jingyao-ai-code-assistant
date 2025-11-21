@@ -1,6 +1,17 @@
 package com.jingyao.jingyaoaicodeassistant.controller;
 
+import cn.hutool.core.bean.BeanUtil;
+import cn.hutool.core.util.StrUtil;
+import com.jingyao.jingyaoaicodeassistant.ai.model.enums.CodeGenTypeEnum;
+import com.jingyao.jingyaoaicodeassistant.common.BaseResponse;
+import com.jingyao.jingyaoaicodeassistant.common.ResultUtils;
+import com.jingyao.jingyaoaicodeassistant.exception.ErrorCode;
+import com.jingyao.jingyaoaicodeassistant.exception.ThrowUtils;
+import com.jingyao.jingyaoaicodeassistant.model.dto.app.AppAddRequest;
+import com.jingyao.jingyaoaicodeassistant.model.entity.User;
+import com.jingyao.jingyaoaicodeassistant.service.UserService;
 import com.mybatisflex.core.paginate.Page;
+import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -27,69 +38,37 @@ public class AppController {
 	@Autowired
 	private AppService appService;
 	
-	/**
-	 * 保存应用。
-	 *
-	 * @param app 应用
-	 * @return {@code true} 保存成功，{@code false} 保存失败
-	 */
-	@PostMapping("save")
-	public boolean save(@RequestBody App app) {
-		return appService.save(app);
-	}
+	@Autowired
+	private UserService userService;
 	
 	/**
-	 * 根据主键删除应用。
+	 * 创建应用
 	 *
-	 * @param id 主键
-	 * @return {@code true} 删除成功，{@code false} 删除失败
+	 * @param appAddRequest 创建应用请求
+	 * @param request 请求对象
+	 * @return 应用 id
 	 */
-	@DeleteMapping("remove/{id}")
-	public boolean remove(@PathVariable Long id) {
-		return appService.removeById(id);
+	@PostMapping("/add")
+	public BaseResponse<Long> addApp(@RequestBody AppAddRequest appAddRequest, HttpServletRequest request) {
+		ThrowUtils.throwIf(appAddRequest == null, ErrorCode.PARAMS_ERROR);
+		// 参数校验
+		String initPrompt = appAddRequest.getInitPrompt();
+		ThrowUtils.throwIf(StrUtil.isBlank(initPrompt), ErrorCode.PARAMS_ERROR, "初始化 prompt 不能为空");
+		// 获取当前登录用户
+		User loginUser = userService.getLoginUser(request);
+		// 构造入库对象
+		App app = new App();
+		BeanUtil.copyProperties(appAddRequest, app);
+		app.setUserId(loginUser.getId());
+		// 应用名称设置为 initPrompt 的前 12 位
+		app.setAppName(initPrompt.substring(0, Math.min(initPrompt.length(), 12)));
+		// 代码生成类型设置为多文件生成
+		app.setCodeGenType(CodeGenTypeEnum.MULTI_FILE.getValue());
+		// 插入数据库
+		boolean result = appService.save(app);
+		ThrowUtils.throwIf(!result, ErrorCode.OPERATION_ERROR);
+		return ResultUtils.success(app.getId());
 	}
 	
-	/**
-	 * 根据主键更新应用。
-	 *
-	 * @param app 应用
-	 * @return {@code true} 更新成功，{@code false} 更新失败
-	 */
-	@PutMapping("update")
-	public boolean update(@RequestBody App app) {
-		return appService.updateById(app);
-	}
-	
-	/**
-	 * 查询所有应用。
-	 *
-	 * @return 所有数据
-	 */
-	@GetMapping("list")
-	public List<App> list() {
-		return appService.list();
-	}
-	
-	/**
-	 * 根据主键获取应用。
-	 *
-	 * @param id 应用主键
-	 * @return 应用详情
-	 */
-	@GetMapping("getInfo/{id}")
-	public App getInfo(@PathVariable Long id) {
-		return appService.getById(id);
-	}
-	
-	/**
-	 * 分页查询应用。
-	 *
-	 * @param page 分页对象
-	 * @return 分页对象
-	 */
-	@GetMapping("page")
-	public Page<App> page(Page<App> page) {
-		return appService.page(page);
-	}
 	
 }
