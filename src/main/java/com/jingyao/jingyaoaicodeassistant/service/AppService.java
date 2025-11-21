@@ -1,5 +1,6 @@
 package com.jingyao.jingyaoaicodeassistant.service;
 
+import com.jingyao.jingyaoaicodeassistant.model.vo.AppVO;
 import com.mybatisflex.core.service.IService;
 import com.jingyao.jingyaoaicodeassistant.model.entity.App;
 
@@ -9,5 +10,5 @@ import com.jingyao.jingyaoaicodeassistant.model.entity.App;
  * @author <a href="https://github.com/jingyao152">JINGYAO</a>
  */
 public interface AppService extends IService<App> {
-
+	AppVO getAppVO(App app);
 }
