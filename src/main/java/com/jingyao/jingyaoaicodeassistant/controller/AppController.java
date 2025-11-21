@@ -6,6 +6,7 @@ import com.jingyao.jingyaoaicodeassistant.ai.model.enums.CodeGenTypeEnum;
 import com.jingyao.jingyaoaicodeassistant.common.BaseResponse;
 import com.jingyao.jingyaoaicodeassistant.common.DeleteRequest;
 import com.jingyao.jingyaoaicodeassistant.common.ResultUtils;
+import com.jingyao.jingyaoaicodeassistant.constant.AppConstant;
 import com.jingyao.jingyaoaicodeassistant.constant.UserConstant;
 import com.jingyao.jingyaoaicodeassistant.exception.BusinessException;
 import com.jingyao.jingyaoaicodeassistant.exception.ErrorCode;
@@ -201,6 +202,44 @@ public class AppController {
 		appVOPage.setRecords(appVOList);
 		
 		// 返回包含分页数据和应用列表的成功响应
+		return ResultUtils.success(appVOPage);
+	}
+	
+	/**
+	 * 分页获取精选应用列表
+	 *
+	 * @param appQueryRequest 应用查询请求对象，包含分页参数和查询条件
+	 * @return {@code BaseResponse<Page<AppVO>>} 返回分页的精选应用视图对象列表
+	 * @throws BusinessException 当查询请求参数无效时抛出参数错误异常
+	 * @throws BusinessException 当每页查询数量超过20个时抛出参数错误异常
+	 */
+	@PostMapping("/good/list/page/vo")
+	public BaseResponse<Page<AppVO>> listGoodAppVOByPage(@RequestBody AppQueryRequest appQueryRequest) {
+		// 确保查询请求对象不为null
+		ThrowUtils.throwIf(appQueryRequest == null, ErrorCode.PARAMS_ERROR);
+		
+		// 确保每页查询数量不超过20个应用，防止数据库压力过大
+		long pageSize = appQueryRequest.getPageSize();
+		ThrowUtils.throwIf(pageSize > 20, ErrorCode.PARAMS_ERROR, "每页最多查询 20 个应用");
+		long pageNum = appQueryRequest.getPageNum();
+		
+		// 设置查询条件只获取优先级为精选的应用
+		// AppConstant.GOOD_APP_PRIORITY 表示精选应用的优先级值
+		appQueryRequest.setPriority(AppConstant.GOOD_APP_PRIORITY);
+		
+		// 根据查询请求构建MyBatis-Flex查询包装器
+		// 自动包含优先级筛选条件
+		QueryWrapper queryWrapper = appService.getQueryWrapper(appQueryRequest);
+		
+		// 获取符合条件的精选应用列表
+		Page<App> appPage = appService.page(Page.of(pageNum, pageSize), queryWrapper);
+		
+		// 将实体对象转换为视图对象并补充用户信息
+		Page<AppVO> appVOPage = new Page<>(pageNum, pageSize, appPage.getTotalRow());
+		List<AppVO> appVOList = appService.getAppVOList(appPage.getRecords());
+		appVOPage.setRecords(appVOList);
+		
+		// 返回包含分页数据和精选应用列表的成功响应
 		return ResultUtils.success(appVOPage);
 	}
 	
