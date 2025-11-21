@@ -1,5 +1,6 @@
 package com.jingyao.jingyaoaicodeassistant.service.impl;
 
+import cn.hutool.core.collection.CollUtil;
 import com.jingyao.jingyaoaicodeassistant.exception.BusinessException;
 import com.jingyao.jingyaoaicodeassistant.exception.ErrorCode;
 import com.jingyao.jingyaoaicodeassistant.model.dto.app.AppQueryRequest;
@@ -14,6 +15,12 @@ import com.jingyao.jingyaoaicodeassistant.mapper.AppMapper;
 import com.jingyao.jingyaoaicodeassistant.service.AppService;
 import org.springframework.beans.BeanUtils;
 import org.springframework.stereotype.Service;
+
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
+import java.util.stream.Collectors;
 
 /**
  * 应用 服务层实现。
@@ -109,6 +116,51 @@ public class AppServiceImpl extends ServiceImpl<AppMapper, App> implements AppSe
 			// 排序条件：根据指定字段进行排序
 			// 当sortOrder为"ascend"时升序排列，否则使用默认排序
 			.orderBy(sortField, "ascend".equals(sortOrder));
+	}
+	
+	/**
+	 * 批量将应用实体列表转换为视图对象列表
+	 *
+	 * @param appList 应用实体对象列表，包含需要转换的应用数据
+	 * @return List<AppVO> 应用视图对象列表，包含完整的应用和关联用户信息
+	 */
+	@Override
+	public List<AppVO> getAppVOList(List<App> appList) {
+		// 检查应用列表是否为空或null
+		if (CollUtil.isEmpty(appList)) {
+			return new ArrayList<>();
+		}
+		
+		// 批量获取用户信息，避免N+1查询问题
+		// N+1查询问题：如果在循环中逐个查询用户信息，会导致1次主查询+N次子查询的性能问题
+		
+		// 使用Stream API提取所有应用的用户ID，并通过Collectors.toSet()自动去重
+		Set<Long> userIds = appList.stream()
+			.map(App::getUserId)  // 提取每个应用的用户ID
+			.collect(Collectors.toSet());  // 收集到Set中自动去重
+		
+		// 一次性查询所有用户，避免循环查询数据库
+		Map<Long, UserVO> userVOMap = userService.listByIds(userIds).stream()
+			.collect(Collectors.toMap(
+				User::getId,           // Key：用户ID
+				userService::getUserVO // Value：用户视图对象
+			));
+		
+		// 批量转换应用实体为视图对象
+		return appList.stream().map(app -> {
+			// 获取基础的应用视图对象（不包含用户信息）
+			AppVO appVO = getAppVO(app);
+			
+			// 从预加载的用户映射中获取对应的用户信息
+			UserVO userVO = userVOMap.get(app.getUserId());
+			
+			// 设置应用视图对象中的用户信息
+			// 实现应用与用户的关联关系
+			appVO.setUser(userVO);
+			
+			// 返回完整的应用视图对象
+			return appVO;
+		}).collect(Collectors.toList());  // 收集为列表返回
 	}
 	
 }
