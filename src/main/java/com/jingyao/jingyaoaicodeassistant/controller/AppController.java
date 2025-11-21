@@ -11,10 +11,13 @@ import com.jingyao.jingyaoaicodeassistant.exception.BusinessException;
 import com.jingyao.jingyaoaicodeassistant.exception.ErrorCode;
 import com.jingyao.jingyaoaicodeassistant.exception.ThrowUtils;
 import com.jingyao.jingyaoaicodeassistant.model.dto.app.AppAddRequest;
+import com.jingyao.jingyaoaicodeassistant.model.dto.app.AppQueryRequest;
 import com.jingyao.jingyaoaicodeassistant.model.dto.app.AppUpdateRequest;
 import com.jingyao.jingyaoaicodeassistant.model.entity.User;
 import com.jingyao.jingyaoaicodeassistant.model.vo.AppVO;
 import com.jingyao.jingyaoaicodeassistant.service.UserService;
+import com.mybatisflex.core.paginate.Page;
+import com.mybatisflex.core.query.QueryWrapper;
 import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -22,6 +25,7 @@ import com.jingyao.jingyaoaicodeassistant.model.entity.App;
 import com.jingyao.jingyaoaicodeassistant.service.AppService;
 
 import java.time.LocalDateTime;
+import java.util.List;
 
 /**
  * 应用 控制层。
@@ -157,6 +161,47 @@ public class AppController {
 		ThrowUtils.throwIf(app == null, ErrorCode.NOT_FOUND_ERROR);
 		// 获取包含用户信息的封装类
 		return ResultUtils.success(appService.getAppVO(app));
+	}
+	
+	/**
+	 * 分页获取当前用户创建的应用列表
+	 *
+	 * @param appQueryRequest 应用查询请求对象，包含分页参数和查询条件
+	 * @param request         HTTP请求对象，用于获取当前登录用户信息
+	 * @return {@code BaseResponse<Page<AppVO>>} 返回分页的应用视图对象列表
+	 * @throws BusinessException 当查询请求参数无效时抛出参数错误异常
+	 * @throws BusinessException 当每页查询数量超过20个时抛出参数错误异常
+	 */
+	@PostMapping("/my/list/page/vo")
+	public BaseResponse<Page<AppVO>> listMyAppVOByPage(@RequestBody AppQueryRequest appQueryRequest,
+	                                                   HttpServletRequest request) {
+		// 确保查询请求对象不为null
+		ThrowUtils.throwIf(appQueryRequest == null, ErrorCode.PARAMS_ERROR);
+		
+		// 获取当前登录用户信息，用于权限验证和数据过滤
+		User loginUser = userService.getLoginUser(request);
+		
+		// 限制每页最多查询20个应用，防止数据库压力过大
+		long pageSize = appQueryRequest.getPageSize();
+		ThrowUtils.throwIf(pageSize > 20, ErrorCode.PARAMS_ERROR, "每页最多查询 20 个应用");
+		long pageNum = appQueryRequest.getPageNum();
+		
+		// 只查询当前用户创建的应用，确保数据隔离
+		appQueryRequest.setUserId(loginUser.getId());
+		
+		// 根据查询请求构建MyBatis-Flex查询包装器
+		QueryWrapper queryWrapper = appService.getQueryWrapper(appQueryRequest);
+		
+		// 获取符合条件的应用列表
+		Page<App> appPage = appService.page(Page.of(pageNum, pageSize), queryWrapper);
+		
+		// 将实体对象转换为视图对象并补充用户信息
+		Page<AppVO> appVOPage = new Page<>(pageNum, pageSize, appPage.getTotalRow());
+		List<AppVO> appVOList = appService.getAppVOList(appPage.getRecords());
+		appVOPage.setRecords(appVOList);
+		
+		// 返回包含分页数据和应用列表的成功响应
+		return ResultUtils.success(appVOPage);
 	}
 	
 }
