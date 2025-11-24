@@ -13,6 +13,7 @@ import com.jingyao.jingyaoaicodeassistant.exception.BusinessException;
 import com.jingyao.jingyaoaicodeassistant.exception.ErrorCode;
 import com.jingyao.jingyaoaicodeassistant.exception.ThrowUtils;
 import com.jingyao.jingyaoaicodeassistant.model.dto.app.AppAddRequest;
+import com.jingyao.jingyaoaicodeassistant.model.dto.app.AppAdminUpdateRequest;
 import com.jingyao.jingyaoaicodeassistant.model.dto.app.AppQueryRequest;
 import com.jingyao.jingyaoaicodeassistant.model.dto.app.AppUpdateRequest;
 import com.jingyao.jingyaoaicodeassistant.model.entity.User;
@@ -274,6 +275,52 @@ public class AppController {
 		
 		// 返回删除结果，包含操作成功状态的统一响应
 		return ResultUtils.success(result);
+	}
+	
+	/**
+	 * 管理员更新应用
+	 *
+	 * @param appAdminUpdateRequest 管理员应用更新请求对象，包含要更新的应用ID和新的应用信息
+	 * @return {@code BaseResponse<Boolean>} 返回更新操作是否成功的布尔值，true表示更新成功
+	 * @throws BusinessException 当更新请求参数无效时抛出参数错误异常
+	 * @throws BusinessException 当应用不存在时抛出未找到错误异常
+	 * @throws BusinessException 当数据库更新操作失败时抛出操作错误异常
+	 * @throws BusinessException 当用户无管理员权限时由@AuthCheck注解处理并抛出权限异常
+	 * @see AppAdminUpdateRequest 管理员应用更新请求对象，包含完整的应用更新信息
+	 * @see AuthCheck 权限检查注解，确保只有管理员可以访问
+	 * @see LocalDateTime#now() 获取当前时间作为编辑时间
+	 */
+	@PostMapping("/admin/update")
+	@AuthCheck(mustRole = UserConstant.ADMIN_ROLE)
+	public BaseResponse<Boolean> updateAppByAdmin(@RequestBody AppAdminUpdateRequest appAdminUpdateRequest) {
+		// 确保请求对象和应用ID不为null
+		if (appAdminUpdateRequest == null || appAdminUpdateRequest.getId() == null) {
+			throw new BusinessException(ErrorCode.PARAMS_ERROR);
+		}
+		
+		// 提取应用ID，用于数据库查询和更新操作
+		long id = appAdminUpdateRequest.getId();
+		
+		// 验证要更新的应用是否存在
+		App oldApp = appService.getById(id);
+		ThrowUtils.throwIf(oldApp == null, ErrorCode.NOT_FOUND_ERROR);
+		
+		// 创建新的应用实体用于数据更新
+		App app = new App();
+		// 将请求中的所有属性拷贝到应用实体，支持批量字段更新
+		BeanUtil.copyProperties(appAdminUpdateRequest, app);
+		
+		// 自动记录当前时间为最后编辑时间
+		app.setEditTime(LocalDateTime.now());
+		
+		// 执行数据库更新操作，无需验证应用所有者
+		boolean result = appService.updateById(app);
+		
+		// 操作结果校验，确保更新操作成功执行
+		ThrowUtils.throwIf(!result, ErrorCode.OPERATION_ERROR);
+		
+		// 返回更新成功的响应：包含操作成功状态的统一响应
+		return ResultUtils.success(true);
 	}
 	
 }
