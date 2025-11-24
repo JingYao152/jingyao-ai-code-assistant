@@ -323,4 +323,43 @@ public class AppController {
 		return ResultUtils.success(true);
 	}
 	
+	/**
+	 * 管理员分页获取应用列表
+	 *
+	 * @param appQueryRequest 应用查询请求对象，包含分页参数和查询条件
+	 * @return BaseResponse<Page < AppVO>> 返回分页的应用视图对象列表，包含系统中所有用户的应用
+	 * @throws BusinessException 当查询请求参数无效时抛出参数错误异常
+	 * @throws BusinessException 当用户无管理员权限时由@AuthCheck注解处理并抛出权限异常
+	 * @see AppQueryRequest 应用查询请求对象，支持多条件组合查询
+	 * @see AuthCheck 权限检查注解，确保只有管理员可以访问
+	 * @see AppVO 应用视图对象，包含完整的应用和用户信息
+	 */
+	@PostMapping("/admin/list/page/vo")
+	@AuthCheck(mustRole = UserConstant.ADMIN_ROLE)
+	public BaseResponse<Page<AppVO>> listAppVOByPageByAdmin(@RequestBody AppQueryRequest appQueryRequest) {
+		// 确保查询请求对象不为null
+		ThrowUtils.throwIf(appQueryRequest == null, ErrorCode.PARAMS_ERROR);
+		
+		// 获取页码和每页数量
+		long pageNum = appQueryRequest.getPageNum();
+		long pageSize = appQueryRequest.getPageSize();
+		
+		// 根据查询请求构建MyBatis-Flex查询包装器
+		// 管理员可以查看所有数据，不受用户ID限制
+		QueryWrapper queryWrapper = appService.getQueryWrapper(appQueryRequest);
+		
+		// 获取符合条件的应用列表
+		// 管理员拥有全数据访问权限，可查看所有用户的应用
+		Page<App> appPage = appService.page(Page.of(pageNum, pageSize), queryWrapper);
+		
+		// 将实体对象转换为视图对象并补充用户信息
+		// 使用getAppVOList方法批量转换并避免N+1查询问题
+		Page<AppVO> appVOPage = new Page<>(pageNum, pageSize, appPage.getTotalRow());
+		List<AppVO> appVOList = appService.getAppVOList(appPage.getRecords());
+		appVOPage.setRecords(appVOList);
+		
+		// 返回成功响应，包含分页数据和应用列表的统一响应
+		return ResultUtils.success(appVOPage);
+	}
+	
 }
