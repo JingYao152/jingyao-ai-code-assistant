@@ -3,6 +3,7 @@ package com.jingyao.jingyaoaicodeassistant.controller;
 import cn.hutool.core.bean.BeanUtil;
 import cn.hutool.core.util.StrUtil;
 import com.jingyao.jingyaoaicodeassistant.ai.model.enums.CodeGenTypeEnum;
+import com.jingyao.jingyaoaicodeassistant.annotation.AuthCheck;
 import com.jingyao.jingyaoaicodeassistant.common.BaseResponse;
 import com.jingyao.jingyaoaicodeassistant.common.DeleteRequest;
 import com.jingyao.jingyaoaicodeassistant.common.ResultUtils;
@@ -241,6 +242,38 @@ public class AppController {
 		
 		// 返回包含分页数据和精选应用列表的成功响应
 		return ResultUtils.success(appVOPage);
+	}
+	
+	/**
+	 * 管理员删除应用
+	 *
+	 * @param deleteRequest 删除请求对象，包含要删除的应用ID
+	 * @return BaseResponse<Boolean> 返回删除操作是否成功的布尔值，true表示删除成功
+	 * @throws BusinessException 当删除请求参数无效时抛出参数错误异常
+	 * @throws BusinessException 当应用不存在时抛出未找到错误异常
+	 * @throws BusinessException 当用户无管理员权限时由@AuthCheck注解处理并抛出权限异常
+	 * @see AuthCheck 权限检查注解，确保只有管理员可以访问
+	 */
+	@PostMapping("/admin/delete")
+	@AuthCheck(mustRole = UserConstant.ADMIN_ROLE)
+	public BaseResponse<Boolean> deleteAppByAdmin(@RequestBody DeleteRequest deleteRequest) {
+		// 确保请求对象不为null且应用ID为正数
+		if (deleteRequest == null || deleteRequest.getId() <= 0) {
+			throw new BusinessException(ErrorCode.PARAMS_ERROR);
+		}
+		
+		// 提取应用ID，用于数据库操作
+		long id = deleteRequest.getId();
+		
+		// 验证要删除的应用是否存在
+		App oldApp = appService.getById(id);
+		ThrowUtils.throwIf(oldApp == null, ErrorCode.NOT_FOUND_ERROR);
+		
+		// 执行数据库删除操作，无需验证应用所有者
+		boolean result = appService.removeById(id);
+		
+		// 返回删除结果，包含操作成功状态的统一响应
+		return ResultUtils.success(result);
 	}
 	
 }
