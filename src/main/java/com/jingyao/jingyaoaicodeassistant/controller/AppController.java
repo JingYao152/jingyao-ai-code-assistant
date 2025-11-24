@@ -362,4 +362,26 @@ public class AppController {
 		return ResultUtils.success(appVOPage);
 	}
 	
+	/**
+	 * 管理员根据ID获取应用详情
+	 *
+	 * @param id 应用ID，必须为正整数
+	 * @return {@code BaseResponse<AppVO>} 返回包含应用详情的统一响应对象，包含完整的应用和用户信息
+	 * @throws BusinessException 当应用ID无效（小于等于0）时抛出参数错误异常
+	 * @throws BusinessException 当应用不存在时抛出未找到错误异常
+	 * @throws BusinessException 当用户无管理员权限时由@AuthCheck注解处理并抛出权限异常
+	 * @see AppVO 应用视图对象，包含应用信息和创建者用户信息
+	 * @see AuthCheck 权限检查注解，确保只有管理员可以访问
+	 */
+	@GetMapping("/admin/get/vo")
+	@AuthCheck(mustRole = UserConstant.ADMIN_ROLE)
+	public BaseResponse<AppVO> getAppVOByIdByAdmin(long id) {
+		ThrowUtils.throwIf(id <= 0, ErrorCode.PARAMS_ERROR);
+		// 查询数据库
+		App app = appService.getById(id);
+		ThrowUtils.throwIf(app == null, ErrorCode.NOT_FOUND_ERROR);
+		// 获取封装类
+		return ResultUtils.success(appService.getAppVO(app));
+	}
+	
 }
