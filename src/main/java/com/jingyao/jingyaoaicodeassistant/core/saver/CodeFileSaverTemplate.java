@@ -24,18 +24,18 @@ public abstract class CodeFileSaverTemplate<T> {
 	protected static final String FILE_SAVE_ROOT_DIR = System.getProperty("user.dir") + "/tmp/code_output";
 	
 	/**
-	 * 保存代码的主方法
+	 * 保存代码的主方法（使用 appId）
 	 * 实现了保存代码文件的完整流程：验证输入、创建目录、保存文件
 	 *
 	 * @param result 代码结果对象，包含需要保存的代码内容
+	 * @param appId  应用 ID
 	 * @return 保存代码的目录文件对象
 	 */
-	public final File saveCode(T result) {
+	public final File saveCode(T result, Long appId) {
 		// 验证输入参数的有效性
 		validateInput(result);
 		// 构建唯一的保存目录
-		String baseDirPath = buildUniqueDir();
-		
+		String baseDirPath = buildUniqueDir(appId);
 		// 保存代码文件（由子类实现具体逻辑）
 		saveFiles(result, baseDirPath);
 		// 返回保存目录的File对象
@@ -56,19 +56,19 @@ public abstract class CodeFileSaverTemplate<T> {
 	}
 	
 	/**
-	 * 构建唯一的保存目录
+	 * 构建基于appId的唯一保存目录
 	 * 根据代码类型和雪花算法生成的唯一ID创建目录名
 	 *
+	 * @param appId 应用 ID
 	 * @return 构建好的目录路径
 	 */
-	protected final String buildUniqueDir() {
-		// 获取代码类型值（由子类提供具体实现）
+	protected final String buildUniqueDir(Long appId) {
+		if (appId == null) {
+			throw new BusinessException(ErrorCode.PARAMS_ERROR, "应用 ID 不能为空");
+		}
 		String codeType = getCodeType().getValue();
-		// 使用代码类型和雪花ID构建唯一目录名
-		String uniqueDirName = StrUtil.format("{}_{}", codeType, IdUtil.getSnowflakeNextIdStr());
-		// 构建完整的目录路径
+		String uniqueDirName = StrUtil.format("{}_{}", codeType, appId);
 		String dirPath = FILE_SAVE_ROOT_DIR + File.separator + uniqueDirName;
-		// 创建目录（如果不存在）
 		FileUtil.mkdir(dirPath);
 		return dirPath;
 	}
