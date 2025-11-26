@@ -33,14 +33,15 @@ public class CodeFileSaverExecutor {
 	 *
 	 * @param codeResult 代码结果对象，需要根据codeGenTypeEnum类型进行相应的类型转换
 	 * @param codeGenTypeEnum 代码生成类型枚举，决定使用哪种保存策略
+	 * @param appId 应用 ID，用于构建唯一的保存目录
 	 * @return 保存成功后的文件对象，通常是包含生成代码文件的目录
 	 * @throws BusinessException 当遇到不支持的代码生成类型时抛出业务异常
 	 * @throws ClassCastException 当codeResult与指定的codeGenTypeEnum类型不匹配时可能抛出类型转换异常
 	 */
-	public static File executeSaver(Object codeResult, CodeGenTypeEnum codeGenTypeEnum) {
+	public static File executeSaver(Object codeResult, CodeGenTypeEnum codeGenTypeEnum, Long appId) {
 		return switch (codeGenTypeEnum) {
-			case HTML -> htmlCodeFileSaverTemplate.saveCode((HtmlCodeResult) codeResult);
-			case MULTI_FILE -> multiFileCodeFileSaverTemplate.saveCode((MultiFileCodeResult) codeResult);
+			case HTML -> htmlCodeFileSaverTemplate.saveCode((HtmlCodeResult) codeResult, appId);
+			case MULTI_FILE -> multiFileCodeFileSaverTemplate.saveCode((MultiFileCodeResult) codeResult, appId);
 			default -> throw new BusinessException(ErrorCode.SYSTEM_ERROR, "不支持的代码生成类型: " + codeGenTypeEnum);
 		};
 	}
