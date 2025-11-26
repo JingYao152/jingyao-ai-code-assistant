@@ -1,8 +1,12 @@
 package com.jingyao.jingyaoaicodeassistant.service.impl;
 
 import cn.hutool.core.collection.CollUtil;
+import cn.hutool.core.util.StrUtil;
+import com.jingyao.jingyaoaicodeassistant.ai.model.enums.CodeGenTypeEnum;
+import com.jingyao.jingyaoaicodeassistant.core.AiCodeGeneratorFacade;
 import com.jingyao.jingyaoaicodeassistant.exception.BusinessException;
 import com.jingyao.jingyaoaicodeassistant.exception.ErrorCode;
+import com.jingyao.jingyaoaicodeassistant.exception.ThrowUtils;
 import com.jingyao.jingyaoaicodeassistant.model.dto.app.AppQueryRequest;
 import com.jingyao.jingyaoaicodeassistant.model.entity.User;
 import com.jingyao.jingyaoaicodeassistant.model.vo.AppVO;
@@ -14,7 +18,9 @@ import com.jingyao.jingyaoaicodeassistant.model.entity.App;
 import com.jingyao.jingyaoaicodeassistant.mapper.AppMapper;
 import com.jingyao.jingyaoaicodeassistant.service.AppService;
 import org.springframework.beans.BeanUtils;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import reactor.core.publisher.Flux;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -29,11 +35,14 @@ import java.util.stream.Collectors;
  */
 @Service
 public class AppServiceImpl extends ServiceImpl<AppMapper, App> implements AppService {
-	
+	@Autowired
 	private final UserService userService;
+	@Autowired
+	private final AiCodeGeneratorFacade aiCodeGeneratorFacade;
 	
-	public AppServiceImpl(UserService userService) {
+	public AppServiceImpl(UserService userService, AiCodeGeneratorFacade aiCodeGeneratorFacade) {
 		this.userService = userService;
+		this.aiCodeGeneratorFacade = aiCodeGeneratorFacade;
 	}
 	
 	/**
@@ -161,6 +170,41 @@ public class AppServiceImpl extends ServiceImpl<AppMapper, App> implements AppSe
 			// 返回完整的应用视图对象
 			return appVO;
 		}).collect(Collectors.toList());  // 收集为列表返回
+	}
+	
+	/**
+	 * 通过对话生成代码的核心业务方法
+	 *
+	 * @param appId 应用ID，用于标识具体的代码生成应用，必须为正数
+	 * @param message 用户输入的消息内容，包含代码生成需求描述，不能为空
+	 * @param loginUser 当前登录用户，用于权限验证和代码生成上下文
+	 * @return {@code Flux<String>} 返回流式字符串，包含AI生成的代码内容，支持实时推送
+	 * @throws BusinessException 当应用ID无效时抛出参数错误异常
+	 * @throws BusinessException 当用户消息为空时抛出参数错误异常
+	 * @throws BusinessException 当应用不存在时抛出未找到错误异常
+	 * @throws BusinessException 当用户无权限访问应用时抛出权限错误异常
+	 * @throws BusinessException 当代码生成类型不支持时抛出系统错误异常
+	 */
+	@Override
+	public Flux<String> chatToGenCode(Long appId, String message, User loginUser) {
+		// 1. 参数校验
+		ThrowUtils.throwIf(appId == null || appId <= 0, ErrorCode.PARAMS_ERROR, "应用 ID 不能为空");
+		ThrowUtils.throwIf(StrUtil.isBlank(message), ErrorCode.PARAMS_ERROR, "用户消息不能为空");
+		// 2. 查询应用信息
+		App app = this.getById(appId);
+		ThrowUtils.throwIf(app == null, ErrorCode.NOT_FOUND_ERROR, "应用不存在");
+		// 3. 验证用户是否有权限访问该应用，仅本人可以生成代码
+		if (!app.getUserId().equals(loginUser.getId())) {
+			throw new BusinessException(ErrorCode.NO_AUTH_ERROR, "无权限访问该应用");
+		}
+		// 4. 获取应用的代码生成类型
+		String codeGenTypeStr = app.getCodeGenType();
+		CodeGenTypeEnum codeGenTypeEnum = CodeGenTypeEnum.getEnumByValue(codeGenTypeStr);
+		if (codeGenTypeEnum == null) {
+			throw new BusinessException(ErrorCode.SYSTEM_ERROR, "不支持的代码生成类型");
+		}
+		// 5. 调用 AI 生成代码
+		return aiCodeGeneratorFacade.generateAndSaveCodeStream(message, codeGenTypeEnum, appId);
 	}
 	
 }
