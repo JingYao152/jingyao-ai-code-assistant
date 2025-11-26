@@ -5,7 +5,8 @@ target/
 !**/src/test/**/target/
 .mvn
 jingyao-ai-code-assistant-frontend
-
+src/main/resources/application-local.yaml
+tmp
 ### STS ###
 .apt_generated
 .classpath
