@@ -2,6 +2,7 @@ package com.jingyao.jingyaoaicodeassistant.controller;
 
 import cn.hutool.core.bean.BeanUtil;
 import cn.hutool.core.util.StrUtil;
+import cn.hutool.json.JSONUtil;
 import com.jingyao.jingyaoaicodeassistant.ai.model.enums.CodeGenTypeEnum;
 import com.jingyao.jingyaoaicodeassistant.annotation.AuthCheck;
 import com.jingyao.jingyaoaicodeassistant.common.BaseResponse;
@@ -23,14 +24,17 @@ import com.mybatisflex.core.paginate.Page;
 import com.mybatisflex.core.query.QueryWrapper;
 import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.http.MediaType;
+import org.springframework.http.codec.ServerSentEvent;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.beans.factory.annotation.Autowired;
 import com.jingyao.jingyaoaicodeassistant.model.entity.App;
 import com.jingyao.jingyaoaicodeassistant.service.AppService;
 import reactor.core.publisher.Flux;
+import reactor.core.publisher.Mono;
 
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Map;
 
 /**
  * 应用 控制层。
@@ -395,16 +399,30 @@ public class AppController {
 	 * @return 生成结果流
 	 */
 	@GetMapping(value = "/chat/gen/code", produces = MediaType.TEXT_EVENT_STREAM_VALUE)
-	public Flux<String> chatToGenCode(@RequestParam Long appId,
-	                                  @RequestParam String message,
-	                                  HttpServletRequest request) {
+	public Flux<ServerSentEvent<String>> chatToGenCode(@RequestParam Long appId,
+	                                                   @RequestParam String message,
+	                                                   HttpServletRequest request) {
 		// 参数校验
 		ThrowUtils.throwIf(appId == null || appId <= 0, ErrorCode.PARAMS_ERROR, "应用ID无效");
 		ThrowUtils.throwIf(StrUtil.isBlank(message), ErrorCode.PARAMS_ERROR, "用户消息不能为空");
 		// 获取当前登录用户
 		User loginUser = userService.getLoginUser(request);
 		// 调用服务生成代码（流式）
-		return appService.chatToGenCode(appId, message, loginUser);
+		Flux<String> contentFlux = appService.chatToGenCode(appId, message, loginUser);
+		// 将字符串内容包装为 ServerSentEvent 流
+		return contentFlux.map(chunk -> {
+				Map<String, String> wrapper = Map.of("d", chunk);
+				String jsonData = JSONUtil.toJsonStr(wrapper);
+				return ServerSentEvent.<String>builder()
+					.data(jsonData)
+					.build();
+			})
+			.concatWith(Mono.just(
+				ServerSentEvent.<String>builder()
+					.event("DONE")
+					.data("")
+					.build()
+			));
 	}
 	
 }
