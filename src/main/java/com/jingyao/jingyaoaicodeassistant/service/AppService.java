@@ -1,10 +1,12 @@
 package com.jingyao.jingyaoaicodeassistant.service;
 
 import com.jingyao.jingyaoaicodeassistant.model.dto.app.AppQueryRequest;
+import com.jingyao.jingyaoaicodeassistant.model.entity.User;
 import com.jingyao.jingyaoaicodeassistant.model.vo.AppVO;
 import com.mybatisflex.core.query.QueryWrapper;
 import com.mybatisflex.core.service.IService;
 import com.jingyao.jingyaoaicodeassistant.model.entity.App;
+import reactor.core.publisher.Flux;
 
 import java.util.List;
 
@@ -19,4 +21,6 @@ public interface AppService extends IService<App> {
 	QueryWrapper getQueryWrapper(AppQueryRequest appQueryRequest);
 	
 	List<AppVO> getAppVOList(List<App> appList);
+	
+	Flux<String> chatToGenCode(Long appId, String message, User loginUser);
 }
