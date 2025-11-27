@@ -212,6 +212,20 @@ public class AppServiceImpl extends ServiceImpl<AppMapper, App> implements AppSe
 		return aiCodeGeneratorFacade.generateAndSaveCodeStream(message, codeGenTypeEnum, appId);
 	}
 	
+	/**
+	 * 应用部署服务方法
+	 *
+	 * @param appId 应用ID，用于标识要部署的应用，必须为正数
+	 * @param loginUser 当前登录用户，用于权限验证和部署记录
+	 * @return {@code String} 返回部署后应用的可访问URL，格式为"部署主机/部署密钥/"
+	 * @throws BusinessException 当应用ID无效时抛出参数错误异常
+	 * @throws BusinessException 当用户未登录时抛出未登录错误异常
+	 * @throws BusinessException 当应用不存在时抛出未找到错误异常
+	 * @throws BusinessException 当用户无权限部署应用时抛出权限错误异常
+	 * @throws BusinessException 当应用代码不存在时抛出系统错误异常
+	 * @throws BusinessException 当文件复制失败时抛出系统错误异常
+	 * @throws BusinessException 当更新部署信息失败时抛出操作错误异常
+	 */
 	@Override
 	public String deployApp(Long appId, User loginUser) {
 		// 1. 参数校验
