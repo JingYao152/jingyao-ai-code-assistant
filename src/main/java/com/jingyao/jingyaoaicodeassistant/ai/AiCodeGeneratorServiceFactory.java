@@ -1,5 +1,7 @@
 package com.jingyao.jingyaoaicodeassistant.ai;
 
+import dev.langchain4j.community.store.memory.chat.redis.RedisChatMemoryStore;
+import dev.langchain4j.memory.chat.MessageWindowChatMemory;
 import dev.langchain4j.model.chat.ChatModel;
 import dev.langchain4j.model.chat.StreamingChatModel;
 import dev.langchain4j.service.AiServices;
@@ -24,6 +26,9 @@ public class AiCodeGeneratorServiceFactory {
 	@Resource
 	private StreamingChatModel streamingChatModel;
 	
+	@Resource
+	private RedisChatMemoryStore redisChatMemoryStore;
+	
 	/**
 	 * 创建并配置AiCodeGeneratorService Bean
 	 * 使用AiServices工厂类创建AI代码生成器服务实例
@@ -32,9 +37,20 @@ public class AiCodeGeneratorServiceFactory {
 	 */
 	@Bean
 	public AiCodeGeneratorService aiCodeGeneratorService() {
+		return getAiCodeGeneratorService(0L);
+	}
+	
+	public AiCodeGeneratorService getAiCodeGeneratorService(long appId) {
+		MessageWindowChatMemory chatMemory = MessageWindowChatMemory.builder()
+			.id(appId)
+			.chatMemoryStore(redisChatMemoryStore)
+			.maxMessages(20)
+			.build();
+		
 		return AiServices.builder(AiCodeGeneratorService.class)
 			.chatModel(chatModel)
 			.streamingChatModel(streamingChatModel)
+			.chatMemory(chatMemory)
 			.build();
 	}
 }
