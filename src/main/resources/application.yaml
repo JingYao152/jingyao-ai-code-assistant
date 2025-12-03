@@ -3,6 +3,8 @@ spring:
     redis:
       host: localhost
       port: 6379
+      ttl: 3600
+      password:
   application:
     name: jingyao-ai-code-assistant-backend
   datasource:
