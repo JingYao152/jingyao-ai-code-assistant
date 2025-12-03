@@ -52,7 +52,7 @@ public class AiCodeGeneratorServiceFactory {
 		return getAiCodeGeneratorService(0L);
 	}
 	
-	public AiCodeGeneratorService getAiCodeGeneratorService(long appId) {
+	private AiCodeGeneratorService createAiCodeGeneratorService(long appId) {
 		MessageWindowChatMemory chatMemory = MessageWindowChatMemory.builder()
 			.id(appId)
 			.chatMemoryStore(redisChatMemoryStore)
@@ -64,5 +64,9 @@ public class AiCodeGeneratorServiceFactory {
 			.streamingChatModel(streamingChatModel)
 			.chatMemory(chatMemory)
 			.build();
+	}
+	
+	public AiCodeGeneratorService getAiCodeGeneratorService(long appId) {
+		return serviceCache.get(appId, this::createAiCodeGeneratorService);
 	}
 }
