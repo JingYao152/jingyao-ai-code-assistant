@@ -3,6 +3,7 @@ package com.jingyao.jingyaoaicodeassistant.config;
 import dev.langchain4j.community.store.memory.chat.redis.RedisChatMemoryStore;
 import lombok.Data;
 import org.springframework.boot.context.properties.ConfigurationProperties;
+import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
 /**
@@ -37,7 +38,8 @@ public class RedisChatMemoryStoreConfig {
 	 * 创建并配置RedisChatMemoryStore实例
 	 * @return 配置好的RedisChatMemoryStore实例
 	 */
-	public RedisChatMemoryStore redisChatMemoryStoreConfig() {
+	@Bean
+	public RedisChatMemoryStore redisChatMemoryStore() {
 		return RedisChatMemoryStore.builder()
 			.host(host)
 			.port(port)
