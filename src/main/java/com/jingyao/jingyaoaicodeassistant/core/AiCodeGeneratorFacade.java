@@ -2,6 +2,7 @@ package com.jingyao.jingyaoaicodeassistant.core;
 
 
 import com.jingyao.jingyaoaicodeassistant.ai.AiCodeGeneratorService;
+import com.jingyao.jingyaoaicodeassistant.ai.AiCodeGeneratorServiceFactory;
 import com.jingyao.jingyaoaicodeassistant.ai.model.HtmlCodeResult;
 import com.jingyao.jingyaoaicodeassistant.ai.model.MultiFileCodeResult;
 import com.jingyao.jingyaoaicodeassistant.ai.model.enums.CodeGenTypeEnum;
@@ -18,23 +19,26 @@ import java.io.File;
 
 /**
  * AI 代码生成外观类，组合生成和保存功能
+ * 作为代码生成模块的统一入口，封装了不同类型代码的生成和保存逻辑
  */
 @Service
 @Slf4j
 public class AiCodeGeneratorFacade {
 	
 	/**
-	 * AI代码生成服务，负责通过AI模型生成代码
+	 * AI代码生成器服务工厂类
 	 */
 	@Resource
-	private AiCodeGeneratorService aiCodeGeneratorService;
+	private AiCodeGeneratorServiceFactory aiCodeGeneratorServiceFactory;
 	
 	/**
 	 * 处理代码流，将流式接收的代码片段进行拼接、解析和保存。
+	 * 该方法会持续接收代码片段，并在流式返回完成后对完整代码进行处理。
 	 *
 	 * @param codeStream 包含代码片段的响应式流
 	 * @param codeGenTypeEnum 代码生成类型枚举，用于指定代码解析和保存的方式
-	 * @return 返回原始代码流
+	 * @param appId 应用ID，用于标识代码所属的应用
+	 * @return 返回原始代码流，确保流式处理不被中断
 	 */
 	private Flux<String> processCodeStream(Flux<String> codeStream, CodeGenTypeEnum codeGenTypeEnum, Long appId) {
 		StringBuilder codeBuilder = new StringBuilder();
@@ -57,8 +61,9 @@ public class AiCodeGeneratorFacade {
 	
 	/**
 	 * 统一入口：根据类型生成并保存代码
+	 * 支持HTML和多文件两种类型的代码生成，每种类型都有对应的处理流程
 	 *
-	 * @param userMessage 用户提示词
+	 * @param userMessage 用户提示词，用于指导AI生成代码
 	 * @param codeGenTypeEnum 生成类型枚举，指定生成HTML还是多文件代码
 	 * @return 保存代码的目录文件对象
 	 * @throws BusinessException 当生成类型为空或不支持时抛出业务异常
@@ -67,6 +72,7 @@ public class AiCodeGeneratorFacade {
 		if (codeGenTypeEnum == null) {
 			throw new BusinessException(ErrorCode.SYSTEM_ERROR, "生成类型为空");
 		}
+		AiCodeGeneratorService aiCodeGeneratorService = aiCodeGeneratorServiceFactory.getAiCodeGeneratorService(appId);
 		return switch (codeGenTypeEnum) {
 			case HTML -> {
 				// 生成HTML代码
@@ -98,6 +104,7 @@ public class AiCodeGeneratorFacade {
 	 *
 	 * @param userMessage 用户提示词
 	 * @param codeGenTypeEnum 生成类型枚举，指定生成HTML还是多文件代码
+	 * @param appId 应用ID
 	 * @return 包含生成代码片段的响应式流
 	 * @throws BusinessException 当生成类型为空或不支持时抛出业务异常
 	 */
@@ -106,6 +113,7 @@ public class AiCodeGeneratorFacade {
 		if (codeGenTypeEnum == null) {
 			throw new BusinessException(ErrorCode.SYSTEM_ERROR, "生成类型为空");
 		}
+		AiCodeGeneratorService aiCodeGeneratorService = aiCodeGeneratorServiceFactory.getAiCodeGeneratorService(appId);
 		// 根据不同的代码生成类型进行处理
 		return switch (codeGenTypeEnum) {
 			// 处理HTML代码生成类型
