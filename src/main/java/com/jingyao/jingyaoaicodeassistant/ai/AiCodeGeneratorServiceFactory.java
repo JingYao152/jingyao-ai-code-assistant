@@ -2,6 +2,7 @@ package com.jingyao.jingyaoaicodeassistant.ai;
 
 import com.github.benmanes.caffeine.cache.Cache;
 import com.github.benmanes.caffeine.cache.Caffeine;
+import com.jingyao.jingyaoaicodeassistant.service.ChatHistoryService;
 import dev.langchain4j.community.store.memory.chat.redis.RedisChatMemoryStore;
 import dev.langchain4j.memory.chat.MessageWindowChatMemory;
 import dev.langchain4j.model.chat.ChatModel;
@@ -9,6 +10,7 @@ import dev.langchain4j.model.chat.StreamingChatModel;
 import dev.langchain4j.service.AiServices;
 import jakarta.annotation.Resource;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
@@ -40,6 +42,8 @@ public class AiCodeGeneratorServiceFactory {
 	private StreamingChatModel streamingChatModel;
 	@Resource
 	private RedisChatMemoryStore redisChatMemoryStore;
+	@Autowired
+	private ChatHistoryService chatHistoryService;
 	
 	/**
 	 * 创建并配置AiCodeGeneratorService Bean
@@ -58,7 +62,7 @@ public class AiCodeGeneratorServiceFactory {
 			.chatMemoryStore(redisChatMemoryStore)
 			.maxMessages(20)
 			.build();
-		
+		chatHistoryService.loadChatHistoryToMemory(appId, chatMemory, 20);
 		return AiServices.builder(AiCodeGeneratorService.class)
 			.chatModel(chatModel)
 			.streamingChatModel(streamingChatModel)
