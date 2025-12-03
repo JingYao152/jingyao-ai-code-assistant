@@ -1,4 +1,6 @@
 spring:
+  session:
+    timeout: 2592000
   data:
     redis:
       host: localhost
@@ -22,6 +24,10 @@ server:
   port: 8123
   servlet:
     context-path: /api
+    session:
+      cookie:
+        # 30天过期
+        max-age: 2592000
 # springdoc-openapi
 springdoc:
   group-configs:
