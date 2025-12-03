@@ -1,4 +1,8 @@
 spring:
+  data:
+    redis:
+      host: localhost
+      port: 6379
   application:
     name: jingyao-ai-code-assistant-backend
   datasource:
