@@ -21,7 +21,14 @@ public enum CodeGenTypeEnum {
 	 * text: 显示文本 - "原生多文件模式"
 	 * value: 值 - "multi_file"
 	 */
-	MULTI_FILE("原生多文件模式", "multi_file");
+	MULTI_FILE("原生多文件模式", "multi_file"),
+	
+	/**
+	 * VUE工程模式
+	 * text: 显示文本 - "VUE工程模式"
+	 * value: 值 - "vue_project"
+	 */
+	VUE_PROJECT("Vue工程模式", "vue_project");
 	
 	/**
 	 * 枚举的显示文本
