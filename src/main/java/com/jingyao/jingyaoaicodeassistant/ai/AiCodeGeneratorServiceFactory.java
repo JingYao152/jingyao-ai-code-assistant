@@ -15,6 +15,7 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
 import java.time.Duration;
+import java.util.stream.Stream;
 
 /**
  * AI代码生成器服务工厂类
@@ -39,11 +40,13 @@ public class AiCodeGeneratorServiceFactory {
 	@Resource
 	private ChatModel chatModel;
 	@Resource
-	private StreamingChatModel streamingChatModel;
+	private StreamingChatModel openAiStreamingChatModel;
 	@Resource
 	private RedisChatMemoryStore redisChatMemoryStore;
 	@Autowired
 	private ChatHistoryService chatHistoryService;
+	@Resource
+	private StreamingChatModel reasoningStreamingChatModel;
 	
 	/**
 	 * 创建并配置AiCodeGeneratorService Bean
@@ -65,7 +68,7 @@ public class AiCodeGeneratorServiceFactory {
 		chatHistoryService.loadChatHistoryToMemory(appId, chatMemory, 20);
 		return AiServices.builder(AiCodeGeneratorService.class)
 			.chatModel(chatModel)
-			.streamingChatModel(streamingChatModel)
+			.streamingChatModel(openAiStreamingChatModel)
 			.chatMemory(chatMemory)
 			.build();
 	}
