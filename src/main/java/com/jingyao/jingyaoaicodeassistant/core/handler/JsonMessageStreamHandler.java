@@ -94,7 +94,7 @@ public class JsonMessageStreamHandler {
 					// 处理工具执行结果消息
 					ToolExecutedMessage toolExecutedMessage = JSONUtil.toBean(chunk, ToolExecutedMessage.class);
 					JSONObject jsonObject = JSONUtil.parseObj(toolExecutedMessage.getArguments());
-					String relativeFilePath = jsonObject.getStr("content");
+					String relativeFilePath = jsonObject.getStr("relativeFilePath");
 					String suffix = FileUtil.getSuffix(relativeFilePath);
 					String content = jsonObject.getStr("content");
 					String result = String.format("""
