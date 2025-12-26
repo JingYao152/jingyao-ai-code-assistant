@@ -7,24 +7,25 @@ import cn.hutool.core.util.StrUtil;
 import com.jingyao.jingyaoaicodeassistant.ai.model.enums.CodeGenTypeEnum;
 import com.jingyao.jingyaoaicodeassistant.constant.AppConstant;
 import com.jingyao.jingyaoaicodeassistant.core.AiCodeGeneratorFacade;
+import com.jingyao.jingyaoaicodeassistant.core.handler.StreamHandlerExecutor;
 import com.jingyao.jingyaoaicodeassistant.exception.BusinessException;
 import com.jingyao.jingyaoaicodeassistant.exception.ErrorCode;
 import com.jingyao.jingyaoaicodeassistant.exception.ThrowUtils;
+import com.jingyao.jingyaoaicodeassistant.mapper.AppMapper;
 import com.jingyao.jingyaoaicodeassistant.model.dto.app.AppQueryRequest;
+import com.jingyao.jingyaoaicodeassistant.model.entity.App;
 import com.jingyao.jingyaoaicodeassistant.model.entity.User;
 import com.jingyao.jingyaoaicodeassistant.model.enums.ChatHistoryMessageTypeEnum;
 import com.jingyao.jingyaoaicodeassistant.model.vo.AppVO;
 import com.jingyao.jingyaoaicodeassistant.model.vo.UserVO;
+import com.jingyao.jingyaoaicodeassistant.service.AppService;
 import com.jingyao.jingyaoaicodeassistant.service.ChatHistoryService;
 import com.jingyao.jingyaoaicodeassistant.service.UserService;
 import com.mybatisflex.core.query.QueryWrapper;
 import com.mybatisflex.spring.service.impl.ServiceImpl;
-import com.jingyao.jingyaoaicodeassistant.model.entity.App;
-import com.jingyao.jingyaoaicodeassistant.mapper.AppMapper;
-import com.jingyao.jingyaoaicodeassistant.service.AppService;
+import jakarta.annotation.Resource;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.BeanUtils;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Lazy;
 import org.springframework.stereotype.Service;
 import reactor.core.publisher.Flux;
@@ -46,13 +47,15 @@ import java.util.stream.Collectors;
 @Slf4j
 @Service
 public class AppServiceImpl extends ServiceImpl<AppMapper, App> implements AppService {
-	@Autowired
+	@Resource
 	private final UserService userService;
-	@Autowired
+	@Resource
 	private final AiCodeGeneratorFacade aiCodeGeneratorFacade;
-	@Autowired
+	@Resource
 	@Lazy
 	private final ChatHistoryService chatHistoryService;
+	@Resource
+	private StreamHandlerExecutor streamHandlerExecutor;
 	
 	public AppServiceImpl(UserService userService, AiCodeGeneratorFacade aiCodeGeneratorFacade,
 	                      ChatHistoryService chatHistoryService) {
@@ -223,29 +226,9 @@ public class AppServiceImpl extends ServiceImpl<AppMapper, App> implements AppSe
 		chatHistoryService.addChatMessage(appId, message, ChatHistoryMessageTypeEnum.USER.getValue(),
 			loginUser.getId());
 		// 6. 调用 AI 生成代码（流式）
-		Flux<String> contentFlux = aiCodeGeneratorFacade.generateAndSaveCodeStream(message, codeGenTypeEnum, appId);
+		Flux<String> codeStream = aiCodeGeneratorFacade.generateAndSaveCodeStream(message, codeGenTypeEnum, appId);
 		// 7. 收集AI响应内容并在完成后记录到对话历史
-		StringBuilder aiResponseBuilder = new StringBuilder();
-		return contentFlux
-			.map(chunk -> {
-				// 收集AI响应内容
-				aiResponseBuilder.append(chunk);
-				return chunk;
-			})
-			.doOnComplete(() -> {
-				// 流式响应完成后，添加AI消息到对话历史
-				String aiResponse = aiResponseBuilder.toString();
-				if (StrUtil.isNotBlank(aiResponse)) {
-					chatHistoryService.addChatMessage(appId, aiResponse, ChatHistoryMessageTypeEnum.AI.getValue(),
-						loginUser.getId());
-				}
-			})
-			.doOnError(error -> {
-				// 如果AI回复失败，也要记录错误消息
-				String errorMessage = "AI回复失败: " + error.getMessage();
-				chatHistoryService.addChatMessage(appId, errorMessage, ChatHistoryMessageTypeEnum.AI.getValue(),
-					loginUser.getId());
-			});
+		return streamHandlerExecutor.doExecute(codeStream, chatHistoryService, appId, loginUser, codeGenTypeEnum);
 	}
 	
 	/**
