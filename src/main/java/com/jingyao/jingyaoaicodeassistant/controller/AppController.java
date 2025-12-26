@@ -14,18 +14,18 @@ import com.jingyao.jingyaoaicodeassistant.exception.BusinessException;
 import com.jingyao.jingyaoaicodeassistant.exception.ErrorCode;
 import com.jingyao.jingyaoaicodeassistant.exception.ThrowUtils;
 import com.jingyao.jingyaoaicodeassistant.model.dto.app.*;
+import com.jingyao.jingyaoaicodeassistant.model.entity.App;
 import com.jingyao.jingyaoaicodeassistant.model.entity.User;
 import com.jingyao.jingyaoaicodeassistant.model.vo.AppVO;
+import com.jingyao.jingyaoaicodeassistant.service.AppService;
 import com.jingyao.jingyaoaicodeassistant.service.UserService;
 import com.mybatisflex.core.paginate.Page;
 import com.mybatisflex.core.query.QueryWrapper;
 import jakarta.servlet.http.HttpServletRequest;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.MediaType;
 import org.springframework.http.codec.ServerSentEvent;
 import org.springframework.web.bind.annotation.*;
-import org.springframework.beans.factory.annotation.Autowired;
-import com.jingyao.jingyaoaicodeassistant.model.entity.App;
-import com.jingyao.jingyaoaicodeassistant.service.AppService;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
@@ -69,8 +69,8 @@ public class AppController {
 		app.setUserId(loginUser.getId());
 		// 应用名称设置为 initPrompt 的前 12 位
 		app.setAppName(initPrompt.substring(0, Math.min(initPrompt.length(), 12)));
-		// 代码生成类型设置为多文件生成
-		app.setCodeGenType(CodeGenTypeEnum.MULTI_FILE.getValue());
+		// 代码生成类型设置为VUE项目生成
+		app.setCodeGenType(CodeGenTypeEnum.VUE_PROJECT.getValue());
 		// 插入数据库
 		boolean result = appService.save(app);
 		ThrowUtils.throwIf(!result, ErrorCode.OPERATION_ERROR);
