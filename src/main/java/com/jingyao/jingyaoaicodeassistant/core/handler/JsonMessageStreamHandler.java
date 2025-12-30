@@ -5,9 +5,12 @@ import cn.hutool.core.util.StrUtil;
 import cn.hutool.json.JSONObject;
 import cn.hutool.json.JSONUtil;
 import com.jingyao.jingyaoaicodeassistant.ai.model.message.*;
+import com.jingyao.jingyaoaicodeassistant.constant.AppConstant;
+import com.jingyao.jingyaoaicodeassistant.core.builder.VueProjectBuilder;
 import com.jingyao.jingyaoaicodeassistant.model.entity.User;
 import com.jingyao.jingyaoaicodeassistant.model.enums.ChatHistoryMessageTypeEnum;
 import com.jingyao.jingyaoaicodeassistant.service.ChatHistoryService;
+import jakarta.annotation.Resource;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
 import reactor.core.publisher.Flux;
@@ -22,6 +25,9 @@ import java.util.Set;
 @Slf4j
 @Component
 public class JsonMessageStreamHandler {
+	@Resource
+	private VueProjectBuilder vueProjectBuilder;
+	
 	/**
 	 * 处理JSON消息流
 	 * @param originFlux 原始消息流
@@ -45,6 +51,8 @@ public class JsonMessageStreamHandler {
 				String aiResponse = chatHistoryStringBuilder.toString();
 				chatHistoryService.addChatMessage(appId, aiResponse, ChatHistoryMessageTypeEnum.AI.getValue(),
 					loginUser.getId());
+				String projectPath = AppConstant.CODE_OUTPUT_ROOT_DIR + "/vue_project_" + appId;
+				vueProjectBuilder.buildProjectAsync(projectPath);
 			}).doOnError(error -> {
 				// 处理流式响应过程中的错误
 				String errorMessage = "AI回复失败：" + error.getMessage();
