@@ -39,7 +39,7 @@ public class ChatHistory implements Serializable {
 	/**
 	 * 消息
 	 */
-	@Length(max = 16777215, message = "消息内容不能超过16MB")
+	@Length(max = Integer.MAX_VALUE, message = "消息内容过长")
 	@Column(isLarge = true)
 	private String message;
 	
