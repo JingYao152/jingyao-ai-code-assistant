@@ -9,7 +9,6 @@ import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
-import org.hibernate.validator.constraints.Length;
 
 import java.io.Serial;
 import java.io.Serializable;
@@ -39,8 +38,6 @@ public class ChatHistory implements Serializable {
 	/**
 	 * 消息
 	 */
-	@Length(max = Integer.MAX_VALUE, message = "消息内容过长")
-	@Column(isLarge = true)
 	private String message;
 	
 	/**
