@@ -18,10 +18,13 @@ import com.jingyao.jingyaoaicodeassistant.model.entity.App;
 import com.jingyao.jingyaoaicodeassistant.model.entity.User;
 import com.jingyao.jingyaoaicodeassistant.model.vo.AppVO;
 import com.jingyao.jingyaoaicodeassistant.service.AppService;
+import com.jingyao.jingyaoaicodeassistant.service.ProjectDownloadService;
 import com.jingyao.jingyaoaicodeassistant.service.UserService;
 import com.mybatisflex.core.paginate.Page;
 import com.mybatisflex.core.query.QueryWrapper;
+import jakarta.annotation.Resource;
 import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.MediaType;
 import org.springframework.http.codec.ServerSentEvent;
@@ -29,6 +32,7 @@ import org.springframework.web.bind.annotation.*;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
+import java.io.File;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Map;
@@ -47,6 +51,9 @@ public class AppController {
 	
 	@Autowired
 	private UserService userService;
+	
+	@Resource
+	private ProjectDownloadService projectDownloadService;
 	
 	/**
 	 * 创建应用
@@ -441,4 +448,42 @@ public class AppController {
 		return ResultUtils.success(deployUrl);
 	}
 	
+	/**
+	 * 下载应用代码的方法
+	 * @param appId 应用ID，路径变量
+	 * @param request HTTP请求对象
+	 * @param response HTTP响应对象
+	 */
+	@GetMapping("/download/{appId}")
+	public void downloadAppCode(@PathVariable Long appId, HttpServletRequest request, HttpServletResponse response) {
+		// 检查应用ID是否有效，如果为空或小于等于0则抛出参数错误异常
+		ThrowUtils.throwIf(appId == null || appId <= 0, ErrorCode.PARAMS_ERROR, "应用 ID 不能为空");
+		// 根据应用ID查询应用信息
+		App app = appService.getById(appId);
+		// 检查应用是否存在，不存在则抛出未找到异常
+		ThrowUtils.throwIf(app == null, ErrorCode.NOT_FOUND_ERROR, "应用不存在");
+		// 获取当前登录用户信息
+		User loginUser = userService.getLoginUser(request);
+		// 检查当前用户是否有权限下载此应用代码，无权限则抛出无权限异常
+		if (!app.getUserId().equals(loginUser.getId())) {
+			throw new BusinessException(ErrorCode.NO_AUTH_ERROR, "无权限下载此应用代码");
+		}
+		
+		// 获取代码生成类型
+		String codeGenType = app.getCodeGenType();
+		// 构建源代码目录名称，格式为"代码生成类型_应用ID"
+		String sourceDirName = codeGenType + "_" + appId;
+		// 构建源代码目录完整路径
+		String sourceDirPath = AppConstant.CODE_OUTPUT_ROOT_DIR + File.separator + sourceDirName;
+		
+		// 创建文件对象表示源代码目录
+		File sourceDir = new File(sourceDirPath);
+		// 检查源代码目录是否存在且为目录，不存在则抛出未找到异常
+		ThrowUtils.throwIf(!sourceDir.exists() || !sourceDir.isDirectory(), ErrorCode.NOT_FOUND_ERROR,
+			"应用代码未生成，请先生成代码");
+		// 设置下载文件名称为应用ID
+		String downloadFileName = String.valueOf(appId);
+		// 调用服务将项目代码打包并下载
+		projectDownloadService.downloadProjectAsZip(sourceDirPath, downloadFileName, response);
+	}
 }
