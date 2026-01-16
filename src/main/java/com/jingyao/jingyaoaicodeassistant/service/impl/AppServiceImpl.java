@@ -1,9 +1,11 @@
 package com.jingyao.jingyaoaicodeassistant.service.impl;
 
+import cn.hutool.core.bean.BeanUtil;
 import cn.hutool.core.collection.CollUtil;
 import cn.hutool.core.io.FileUtil;
 import cn.hutool.core.util.RandomUtil;
 import cn.hutool.core.util.StrUtil;
+import com.jingyao.jingyaoaicodeassistant.ai.AiCodeGenTypeRoutingService;
 import com.jingyao.jingyaoaicodeassistant.ai.model.enums.CodeGenTypeEnum;
 import com.jingyao.jingyaoaicodeassistant.constant.AppConstant;
 import com.jingyao.jingyaoaicodeassistant.core.AiCodeGeneratorFacade;
@@ -13,6 +15,7 @@ import com.jingyao.jingyaoaicodeassistant.exception.BusinessException;
 import com.jingyao.jingyaoaicodeassistant.exception.ErrorCode;
 import com.jingyao.jingyaoaicodeassistant.exception.ThrowUtils;
 import com.jingyao.jingyaoaicodeassistant.mapper.AppMapper;
+import com.jingyao.jingyaoaicodeassistant.model.dto.app.AppAddRequest;
 import com.jingyao.jingyaoaicodeassistant.model.dto.app.AppQueryRequest;
 import com.jingyao.jingyaoaicodeassistant.model.entity.App;
 import com.jingyao.jingyaoaicodeassistant.model.entity.User;
@@ -62,6 +65,8 @@ public class AppServiceImpl extends ServiceImpl<AppMapper, App> implements AppSe
 	private VueProjectBuilder vueProjectBuilder;
 	@Resource
 	private ScreenshotService screenshotService;
+	@Resource
+	private AiCodeGenTypeRoutingService aiCodeGenTypeRoutingService;
 	
 	public AppServiceImpl(UserService userService, AiCodeGeneratorFacade aiCodeGeneratorFacade,
 	                      ChatHistoryService chatHistoryService) {
@@ -310,6 +315,32 @@ public class AppServiceImpl extends ServiceImpl<AppMapper, App> implements AppSe
 		// 11. 异步生成截图并更新应用封面
 		generateAppScreenshotAsync(appId, appDeployUrl);
 		return appDeployUrl;
+	}
+	
+	/**
+	 * 创建应用的方法
+	 * @param appAddRequest 包含应用添加请求信息的对象，包含初始化提示等必要参数
+	 * @param loginUser 当前登录用户信息，用于获取用户ID等关联信息
+	 * @return 返回创建成功的应用ID
+	 */
+	@Override
+	public Long createApp(AppAddRequest appAddRequest, User loginUser) {
+		// 参数校验：检查初始化提示是否为空
+		String initPrompt = appAddRequest.getInitPrompt();
+		ThrowUtils.throwIf(StrUtil.isBlank(initPrompt), ErrorCode.PARAMS_ERROR, "初始化提示不能为空");
+		// 创建应用对象并复制请求属性
+		App app = new App();
+		BeanUtil.copyProperties(appAddRequest, app);
+		app.setUserId(loginUser.getId());
+		app.setAppName(initPrompt.substring(0, Math.min(initPrompt.length(), 12)));
+		// 使用AI路由智能选择代码生成类型
+		CodeGenTypeEnum selectedCodeGenType = aiCodeGenTypeRoutingService.routeCodeGenType(initPrompt);
+		app.setCodeGenType(selectedCodeGenType.getValue());
+		// 保存应用
+		boolean result = this.save(app);
+		ThrowUtils.throwIf(!result, ErrorCode.OPERATION_ERROR, "创建应用失败");
+		log.info("创建应用成功，ID：{}，类型：{}", app.getId(), selectedCodeGenType.getValue());
+		return app.getId();
 	}
 	
 	/**
