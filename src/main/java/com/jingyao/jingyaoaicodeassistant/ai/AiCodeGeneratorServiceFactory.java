@@ -3,7 +3,7 @@ package com.jingyao.jingyaoaicodeassistant.ai;
 import com.github.benmanes.caffeine.cache.Cache;
 import com.github.benmanes.caffeine.cache.Caffeine;
 import com.jingyao.jingyaoaicodeassistant.ai.model.enums.CodeGenTypeEnum;
-import com.jingyao.jingyaoaicodeassistant.ai.tools.FileWriteTool;
+import com.jingyao.jingyaoaicodeassistant.ai.tools.*;
 import com.jingyao.jingyaoaicodeassistant.exception.BusinessException;
 import com.jingyao.jingyaoaicodeassistant.exception.ErrorCode;
 import com.jingyao.jingyaoaicodeassistant.service.ChatHistoryService;
@@ -75,7 +75,11 @@ public class AiCodeGeneratorServiceFactory {
 			case VUE_PROJECT -> AiServices.builder(AiCodeGeneratorService.class)
 				.streamingChatModel(reasoningStreamingChatModel)
 				.chatMemoryProvider(memoryId -> chatMemory)
-				.tools(new FileWriteTool())
+				.tools(new FileWriteTool(),
+					new FileReadTool(),
+					new FileModifyTool(),
+					new FileDirReadTool(),
+					new FileDeleteTool())
 				.hallucinatedToolNameStrategy(toolExecutionRequest -> ToolExecutionResultMessage.from(toolExecutionRequest, "Error: 没有一种工具叫做 " + toolExecutionRequest.name())).build();
 			
 			case HTML, MULTI_FILE -> AiServices.builder(AiCodeGeneratorService.class)
